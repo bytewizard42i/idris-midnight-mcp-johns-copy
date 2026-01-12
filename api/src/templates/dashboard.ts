@@ -1,322 +1,232 @@
 /**
  * Dashboard HTML template generator
+ * Orchestrates dashboard components for comprehensive analytics view
  */
 
-import type { Metrics, ToolCall } from "../interfaces";
+import type { Metrics } from "../interfaces";
+import {
+  generatePageWrapper,
+  generateCard,
+  generateGrid,
+  generateEmptyState,
+} from "./components/layout";
+import {
+  generateDashboardMetrics,
+  calculateQualityScore,
+  calculateSuccessRate,
+} from "./components/metrics";
+import {
+  generateBarChart,
+  generateRepoChart,
+  generateQualityBoxes,
+  generateDonutChart,
+} from "./components/charts";
+import {
+  generateQueriesTable,
+  generateToolCallsTable,
+} from "./components/tables";
 
 /**
- * Generate the dashboard HTML page
+ * Generate the complete dashboard HTML page
  */
 export function generateDashboardHtml(metrics: Metrics): string {
-  // Use distribution total for quality score calculation (more accurate than totalQueries)
-  const distributionTotal =
-    metrics.scoreDistribution.high +
-    metrics.scoreDistribution.medium +
-    metrics.scoreDistribution.low;
-  const qualityScore =
-    distributionTotal > 0
-      ? Math.round(
-          (metrics.scoreDistribution.high * 100 +
-            metrics.scoreDistribution.medium * 50) /
-            distributionTotal
-        )
-      : 0;
+  const content =
+    metrics.totalQueries === 0 && (metrics.totalToolCalls || 0) === 0
+      ? generateEmptyState("No activity recorded yet", {
+          icon: "📊",
+          action: { label: "Refresh", onclick: "location.reload()" },
+        })
+      : generateDashboardContent(metrics);
 
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MCP Analytics</title>
-  <style>
-    ${getDashboardStyles()}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>MCP Analytics</h1>
-      <div>
-        <span>${metrics.lastUpdated ? new Date(metrics.lastUpdated).toLocaleString() : "—"}</span>
-        <button class="btn" onclick="location.reload()" style="margin-left: 12px">Refresh</button>
-      </div>
-    </header>
-    
-    ${
-      metrics.totalQueries === 0
-        ? '<div class="card"><p class="empty">No queries yet</p></div>'
-        : generateMetricsContent(metrics, qualityScore)
-    }
-  </div>
-</body>
-</html>`;
+  return generatePageWrapper(content, {
+    title: "MCP Analytics",
+    description: "Midnight MCP Server Analytics Dashboard",
+    refreshable: true,
+    lastUpdated: metrics.lastUpdated,
+  });
 }
 
 /**
- * Dashboard CSS styles
+ * Generate the main dashboard content
  */
-function getDashboardStyles(): string {
-  return `
-    :root { --bg: #111; --card: #1c1c1c; --border: #333; --text: #eee; --muted: #888; --accent: #6366f1; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 24px; line-height: 1.5; }
-    .container { max-width: 1100px; margin: 0 auto; }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
-    header h1 { font-size: 20px; font-weight: 600; }
-    header span { color: var(--muted); font-size: 13px; }
-    .btn { background: var(--card); color: var(--text); border: 1px solid var(--border); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background .15s; }
-    .btn:hover { background: #252525; }
-    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
-    .metric { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
-    .metric-value { font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; }
-    .metric-label { color: var(--muted); font-size: 12px; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
-    .card-title { font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .bar-row { display: flex; align-items: center; margin-bottom: 10px; }
-    .bar-name { width: 90px; font-size: 13px; color: var(--muted); flex-shrink: 0; }
-    .bar-track { flex: 1; height: 8px; background: #252525; border-radius: 4px; overflow: hidden; }
-    .bar-fill { height: 100%; background: var(--accent); border-radius: 4px; transition: width .3s; }
-    .bar-val { width: 40px; text-align: right; font-size: 13px; font-weight: 500; margin-left: 12px; }
-    .quality { display: flex; gap: 12px; }
-    .q-box { flex: 1; text-align: center; padding: 16px 8px; border-radius: 6px; }
-    .q-box.high { background: rgba(34,197,94,.15); color: #22c55e; }
-    .q-box.med { background: rgba(234,179,8,.15); color: #eab308; }
-    .q-box.low { background: rgba(239,68,68,.15); color: #ef4444; }
-    .q-num { font-size: 28px; font-weight: 700; }
-    .q-label { font-size: 11px; margin-top: 4px; opacity: .8; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th { text-align: left; padding: 10px 12px; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
-    td { padding: 10px 12px; border-bottom: 1px solid #222; }
-    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; }
-    .tag.high { background: rgba(34,197,94,.2); color: #22c55e; }
-    .tag.med { background: rgba(234,179,8,.2); color: #eab308; }
-    .tag.low { background: rgba(239,68,68,.2); color: #ef4444; }
-    .empty { color: var(--muted); text-align: center; padding: 32px; font-size: 14px; }
-    .full-width { grid-column: 1 / -1; }
-    
-    /* Tooltip styles */
-    .has-tooltip { position: relative; cursor: help; }
-    .has-tooltip .tooltip { visibility: hidden; opacity: 0; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #2a2a2a; color: var(--text); padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 400; white-space: nowrap; z-index: 100; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,.3); margin-bottom: 8px; max-width: 280px; white-space: normal; text-align: left; line-height: 1.4; }
-    .has-tooltip .tooltip::after { content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%); border: 6px solid transparent; border-top-color: #2a2a2a; }
-    .has-tooltip:hover .tooltip { visibility: visible; opacity: 1; }
-    .metric-label.has-tooltip { display: inline-flex; align-items: center; gap: 4px; }
-    .info-icon { width: 14px; height: 14px; border-radius: 50%; background: var(--border); display: inline-flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--muted); }
-    
-    /* Mobile responsiveness */
-    @media (max-width: 768px) {
-      body { padding: 16px; }
-      header { flex-direction: column; align-items: flex-start; gap: 12px; }
-      header h1 { font-size: 18px; }
-      header > div { display: flex; align-items: center; width: 100%; justify-content: space-between; }
-      .metrics, .grid { grid-template-columns: 1fr; }
-      .metric { padding: 16px; }
-      .metric-value { font-size: 26px; }
-      .card { padding: 16px; }
-      .quality { flex-wrap: wrap; }
-      .q-box { min-width: calc(50% - 6px); flex: 0 0 auto; }
-      .q-num { font-size: 22px; }
-      .bar-name { width: 70px; font-size: 12px; }
-      .bar-val { width: 35px; font-size: 12px; margin-left: 8px; }
-      
-      /* Table mobile view */
-      table { font-size: 12px; display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      th, td { padding: 8px; white-space: nowrap; }
-      td:first-child { max-width: 150px !important; }
-    }
-    
-    @media (max-width: 480px) {
-      body { padding: 12px; }
-      header h1 { font-size: 16px; }
-      .btn { padding: 6px 12px; font-size: 12px; }
-      .metric-value { font-size: 22px; }
-      .metric-label { font-size: 11px; }
-      .card-title { font-size: 12px; margin-bottom: 12px; }
-      .q-box { min-width: 100%; padding: 12px 8px; }
-      .q-num { font-size: 20px; }
-      .bar-name { width: 60px; font-size: 11px; }
-      .bar-track { height: 6px; }
-      .bar-val { width: 30px; font-size: 11px; }
-      
-      /* Stack quality boxes vertically */
-      .quality { flex-direction: column; gap: 8px; }
-    }
-  `;
-}
-
-/**
- * Generate the main metrics content
- */
-function generateMetricsContent(
-  metrics: Metrics,
-  qualityScore: number
-): string {
+function generateDashboardContent(metrics: Metrics): string {
   const totalToolCalls = metrics.totalToolCalls || 0;
   const toolCallsByName = metrics.toolCallsByName || {};
   const recentToolCalls = metrics.recentToolCalls || [];
 
+  // Calculate derived metrics
+  const qualityScore = calculateQualityScore(metrics.scoreDistribution);
+  const successRate = calculateSuccessRate(recentToolCalls);
+
   return `
-    <div class="metrics">
-      <div class="metric">
-        <div class="metric-value">${totalToolCalls.toLocaleString()}</div>
-        <div class="metric-label has-tooltip">
-          Tool Calls
-          <span class="info-icon">?</span>
-          <span class="tooltip">Total MCP tool invocations including search, analysis, code generation, and all other tools.</span>
-        </div>
-      </div>
-      <div class="metric">
-        <div class="metric-value">${metrics.totalQueries.toLocaleString()}</div>
-        <div class="metric-label has-tooltip">
-          Search Queries
-          <span class="info-icon">?</span>
-          <span class="tooltip">Semantic search queries through the hosted API (compact, typescript, docs).</span>
-        </div>
-      </div>
-      <div class="metric">
-        <div class="metric-value">${qualityScore}%</div>
-        <div class="metric-label has-tooltip">
-          Search Quality
-          <span class="info-icon">?</span>
-          <span class="tooltip">Composite metric: (High×100 + Medium×50) / Total. Indicates search effectiveness.</span>
-        </div>
-      </div>
-    </div>
+    ${generateDashboardMetrics({
+      totalToolCalls,
+      totalQueries: metrics.totalQueries,
+      qualityScore,
+      successRate,
+    })}
     
-    <div class="grid">
-      <div class="card">
-        <div class="card-title">Tool Usage</div>
-        ${generateBarChart(toolCallsByName, totalToolCalls)}
+    ${generateOverviewSection(metrics, totalToolCalls, toolCallsByName)}
+    
+    ${generateActivitySection(metrics, recentToolCalls)}
+    
+    ${generateInsightsSection(metrics, qualityScore)}
+  `;
+}
+
+/**
+ * Generate overview section with charts
+ */
+function generateOverviewSection(
+  metrics: Metrics,
+  totalToolCalls: number,
+  toolCallsByName: Record<string, number>
+): string {
+  const toolUsageCard = generateCard(
+    generateBarChart(toolCallsByName, totalToolCalls, {
+      maxItems: 8,
+      emptyMessage: "No tool usage data",
+    }),
+    { title: "Tool Usage" }
+  );
+
+  const searchByTypeCard = generateCard(
+    generateBarChart(metrics.queriesByEndpoint, metrics.totalQueries, {
+      maxItems: 5,
+      emptyMessage: "No search data",
+    }),
+    { title: "Search by Type" }
+  );
+
+  const qualityCard = generateCard(
+    generateQualityBoxes(metrics.scoreDistribution),
+    { title: "Search Quality Distribution" }
+  );
+
+  const repoCard = generateCard(
+    generateRepoChart(metrics.documentsByRepo, {
+      maxItems: 5,
+      emptyMessage: "No repositories indexed",
+    }),
+    { title: "Top Repositories" }
+  );
+
+  return generateGrid([toolUsageCard, searchByTypeCard, qualityCard, repoCard]);
+}
+
+/**
+ * Generate activity section with recent data tables
+ */
+function generateActivitySection(
+  metrics: Metrics,
+  recentToolCalls: Metrics["recentToolCalls"]
+): string {
+  const toolCallsCard = generateCard(
+    generateToolCallsTable(recentToolCalls || [], {
+      maxRows: 10,
+      emptyMessage: "No recent tool calls",
+    }),
+    { title: "Recent Tool Calls" }
+  );
+
+  const queriesCard = generateCard(
+    generateQueriesTable(metrics.recentQueries, {
+      maxRows: 10,
+      emptyMessage: "No recent searches",
+    }),
+    { title: "Recent Searches" }
+  );
+
+  return generateGrid([toolCallsCard, queriesCard]);
+}
+
+/**
+ * Generate insights section with analytics
+ */
+function generateInsightsSection(
+  metrics: Metrics,
+  qualityScore: number
+): string {
+  // Calculate additional insights
+  const totalSearches = metrics.totalQueries;
+  const highQualitySearches = metrics.scoreDistribution.high;
+  const highQualityRate =
+    totalSearches > 0
+      ? Math.round((highQualitySearches / totalSearches) * 100)
+      : 0;
+
+  // Most used tools
+  const toolCallsByName = metrics.toolCallsByName || {};
+  const topTools = Object.entries(toolCallsByName)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+
+  // Most searched types
+  const topEndpoints = Object.entries(metrics.queriesByEndpoint)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
+
+  const insightsHtml = `
+    <div class="insights-grid">
+      <div class="insight-card">
+        ${generateDonutChart(qualityScore, "Quality", { color: getQualityColor(qualityScore) })}
+        <div class="insight-details">
+          <h4>Search Quality</h4>
+          <p>${getQualityMessage(qualityScore)}</p>
+        </div>
       </div>
       
-      <div class="card">
-        <div class="card-title">Search by Type</div>
-        ${generateBarChart(metrics.queriesByEndpoint, metrics.totalQueries)}
-      </div>
-      
-      <div class="card">
-        <div class="card-title">Search Quality</div>
-        <div class="quality">
-          <div class="q-box high has-tooltip">
-            <div class="q-num">${metrics.scoreDistribution.high}</div>
-            <div class="q-label">High ≥70%</div>
-            <span class="tooltip">Queries with ≥70% relevance score. These found highly relevant content.</span>
+      <div class="insight-card">
+        <div class="insight-stats">
+          <div class="insight-stat">
+            <span class="stat-number">${highQualityRate}%</span>
+            <span class="stat-desc">High Quality Rate</span>
           </div>
-          <div class="q-box med has-tooltip">
-            <div class="q-num">${metrics.scoreDistribution.medium}</div>
-            <div class="q-label">Medium</div>
-            <span class="tooltip">Queries with 40-69% relevance. Results were somewhat relevant but could be improved.</span>
-          </div>
-          <div class="q-box low has-tooltip">
-            <div class="q-num">${metrics.scoreDistribution.low}</div>
-            <div class="q-label">Low &lt;40%</div>
-            <span class="tooltip">Queries with <40% relevance. May indicate missing content or unclear queries.</span>
+          <div class="insight-stat">
+            <span class="stat-number">${metrics.scoreDistribution.low}</span>
+            <span class="stat-desc">Low Quality Searches</span>
           </div>
         </div>
       </div>
       
-      <div class="card">
-        <div class="card-title">Top Repositories</div>
-        ${generateRepoChart(metrics.documentsByRepo)}
-      </div>
-    </div>
-    
-    <div class="grid">
-      <div class="card">
-        <div class="card-title">Recent Tool Calls</div>
-        ${generateToolCallsTable(recentToolCalls)}
+      <div class="insight-card">
+        <h4>Top Tools</h4>
+        <ul class="insight-list">
+          ${topTools.map(([name, count]) => `<li><span>${name}</span><span class="tag info">${count}</span></li>`).join("")}
+        </ul>
       </div>
       
-      <div class="card">
-        <div class="card-title">Recent Searches</div>
-        ${generateQueriesTable(metrics.recentQueries)}
+      <div class="insight-card">
+        <h4>Top Search Types</h4>
+        <ul class="insight-list">
+          ${topEndpoints.map(([name, count]) => `<li><span>${name}</span><span class="tag info">${count}</span></li>`).join("")}
+        </ul>
       </div>
     </div>
   `;
+
+  return generateCard(insightsHtml, {
+    title: "Insights",
+    fullWidth: true,
+    className: "insights-section",
+  });
 }
 
 /**
- * Generate a bar chart from data
+ * Get quality color based on score
  */
-function generateBarChart(data: Record<string, number>, total: number): string {
-  const entries = Object.entries(data);
-  if (entries.length === 0) {
-    return '<p class="empty">—</p>';
-  }
-
-  return entries
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, cnt]) => {
-      const pct = total > 0 ? (cnt / total) * 100 : 0;
-      return `<div class="bar-row"><span class="bar-name">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><span class="bar-val">${cnt}</span></div>`;
-    })
-    .join("");
+function getQualityColor(score: number): string {
+  if (score >= 70) return "var(--success)";
+  if (score >= 40) return "var(--warning)";
+  return "var(--error)";
 }
 
 /**
- * Generate repository chart (top 5)
+ * Get quality message based on score
  */
-function generateRepoChart(documentsByRepo: Record<string, number>): string {
-  const entries = Object.entries(documentsByRepo);
-  if (entries.length === 0) {
-    return '<p class="empty">—</p>';
-  }
-
-  const max = Math.max(...entries.map(([, cnt]) => cnt));
-
-  return entries
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([repo, cnt]) => {
-      const pct = max > 0 ? (cnt / max) * 100 : 0;
-      const name = repo.split("/").pop();
-      return `<div class="bar-row"><span class="bar-name" title="${repo}">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><span class="bar-val">${cnt}</span></div>`;
-    })
-    .join("");
-}
-
-/**
- * Generate recent queries table
- */
-function generateQueriesTable(queries: Metrics["recentQueries"]): string {
-  if (!queries || queries.length === 0) {
-    return '<p class="empty">No searches yet</p>';
-  }
-  return `
-    <table>
-      <thead><tr><th>Query</th><th>Type</th><th>Score</th><th>Time</th></tr></thead>
-      <tbody>
-        ${queries
-          .slice(0, 10)
-          .map(
-            (q) =>
-              `<tr><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${q.query}</td><td>${q.endpoint}</td><td><span class="tag ${q.topScore >= 0.7 ? "high" : q.topScore >= 0.4 ? "med" : "low"}">${(q.topScore * 100).toFixed(0)}%</span></td><td style="color:var(--muted)">${new Date(q.timestamp).toLocaleTimeString()}</td></tr>`
-          )
-          .join("")}
-      </tbody>
-    </table>
-  `;
-}
-
-/**
- * Generate recent tool calls table
- */
-function generateToolCallsTable(toolCalls: ToolCall[]): string {
-  if (!toolCalls || toolCalls.length === 0) {
-    return '<p class="empty">No tool calls yet</p>';
-  }
-  return `
-    <table>
-      <thead><tr><th>Tool</th><th>Status</th><th>Time</th></tr></thead>
-      <tbody>
-        ${toolCalls
-          .slice(0, 10)
-          .map(
-            (t) =>
-              `<tr><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${t.tool.replace("midnight-", "")}</td><td><span class="tag ${t.success ? "high" : "low"}">${t.success ? "✓" : "✗"}</span></td><td style="color:var(--muted)">${new Date(t.timestamp).toLocaleTimeString()}</td></tr>`
-          )
-          .join("")}
-      </tbody>
-    </table>
-  `;
+function getQualityMessage(score: number): string {
+  if (score >= 80) return "Excellent! Searches are highly effective.";
+  if (score >= 60) return "Good quality. Most searches find relevant content.";
+  if (score >= 40) return "Fair quality. Consider improving query patterns.";
+  return "Needs improvement. Review indexing and query strategies.";
 }
