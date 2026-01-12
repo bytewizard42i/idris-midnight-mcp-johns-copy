@@ -147,9 +147,14 @@ export async function loadMetrics(kv: KVNamespace | undefined): Promise<void> {
   try {
     const stored = await kv.get("metrics");
     if (stored) {
-      metrics = { ...metrics, ...JSON.parse(stored) };
-      // Recalculate score distribution from recent queries to ensure consistency
-      recalculateScoreDistribution();
+      const storedMetrics = JSON.parse(stored);
+      // Merge stored metrics, preserving score distribution from persistent storage
+      // Score distribution is tracked incrementally and should NOT be recalculated
+      // from recentQueries (which only has last 100) as that would be inaccurate
+      metrics = {
+        ...metrics,
+        ...storedMetrics,
+      };
     }
   } catch (e) {
     console.error("Failed to load metrics:", e);
@@ -157,10 +162,18 @@ export async function loadMetrics(kv: KVNamespace | undefined): Promise<void> {
 }
 
 /**
- * Recalculate score distribution and average relevance from recent queries
- * This ensures consistency when thresholds change or data needs recomputation
+ * Recalculate score distribution and average relevance from recent queries.
+ *
+ * WARNING: This only uses the last 100 queries (recentQueries array).
+ * Use this only for:
+ * - Fixing corrupted data
+ * - When you want metrics based on recent activity only
+ * - NOT for normal operations (would make totalQueries and scoreDistribution inconsistent)
+ *
+ * The score distribution is normally tracked incrementally in trackQuery() and
+ * should represent ALL queries, not just the recent 100.
  */
-function recalculateScoreDistribution(): void {
+export function recalculateScoreDistributionFromRecent(): void {
   const distribution = { high: 0, medium: 0, low: 0 };
   let totalAvgScore = 0;
 
@@ -172,10 +185,8 @@ function recalculateScoreDistribution(): void {
     totalAvgScore += q.avgScore;
   }
 
-  // Only update if we have recent queries to calculate from
   if (metrics.recentQueries.length > 0) {
     metrics.scoreDistribution = distribution;
-    // Recalculate average relevance from stored query scores
     metrics.avgRelevanceScore = totalAvgScore / metrics.recentQueries.length;
   }
 }
