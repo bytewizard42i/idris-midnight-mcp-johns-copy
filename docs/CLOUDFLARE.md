@@ -121,7 +121,8 @@ Index repositories into Vectorize:
 export CLOUDFLARE_ACCOUNT_ID=your_account_id
 export CLOUDFLARE_API_TOKEN=your_api_token
 export OPENAI_API_KEY=your_openai_key
-export GITHUB_TOKEN=your_github_token  # Optional
+export GITHUB_TOKEN=your_github_token            # For public repos
+export MIDNIGHT_GITHUB_TOKEN=your_org_pat        # For private midnightntwrk repos
 
 # Run indexing
 npm run index
