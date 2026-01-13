@@ -21,16 +21,14 @@ type SamplingCallback = (request: SamplingRequest) => Promise<SamplingResponse>;
 // Store for the sampling callback
 let samplingCallback: SamplingCallback | null = null;
 
-// Track if sampling has been verified to work
-let samplingVerified = false;
+// Track if sampling has permanently failed (client doesn't support it)
 let samplingFailedPermanently = false;
 
 /**
  * Check if sampling is available
+ * Returns false if client doesn't support sampling (detected on first failed call)
  */
 export function isSamplingAvailable(): boolean {
-  // If we've already verified sampling works, return true
-  // If we know it failed permanently, return false
   if (samplingFailedPermanently) return false;
   return samplingCallback !== null;
 }
@@ -49,7 +47,6 @@ export function markSamplingFailed(): void {
  */
 export function registerSamplingCallback(callback: SamplingCallback): void {
   samplingCallback = callback;
-  samplingVerified = false;
   samplingFailedPermanently = false;
   logger.info("Sampling capability registered");
 }
@@ -98,9 +95,6 @@ export async function requestCompletion(
     if (response.content.type !== "text") {
       throw new Error("Unexpected response content type");
     }
-
-    // Mark sampling as verified working
-    samplingVerified = true;
 
     return response.content.text;
   } catch (error) {
