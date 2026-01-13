@@ -115,14 +115,54 @@ async function tryHostedSearch<
       ...response,
       ...(warnings.length > 0 && { warnings }),
     } as T;
-    // Cache with correct structure
+    // Cache with proper mapping that preserves all metadata
     searchCache.set(cacheKey, {
-      results: finalResponse.results as Array<{
-        code?: string;
-        content?: string;
-        relevanceScore: number;
-        source: { repository: string; filePath: string };
-      }>,
+      results: finalResponse.results.map((item) => {
+        // Type assertion for hosted search result structure
+        const result = item as {
+          code?: string;
+          content?: string;
+          relevanceScore: number;
+          source: {
+            repository: string;
+            filePath: string;
+            lines?: string;
+            section?: string;
+          };
+          codeType?: string;
+          name?: string;
+          isExported?: boolean;
+        };
+
+        // Parse lines string (e.g., "10-20") into numeric startLine/endLine
+        let startLine: number | undefined;
+        let endLine: number | undefined;
+        if (result.source.lines) {
+          const lineParts = result.source.lines.split("-");
+          if (lineParts.length === 2) {
+            startLine = parseInt(lineParts[0], 10);
+            endLine = parseInt(lineParts[1], 10);
+          } else if (lineParts.length === 1) {
+            startLine = endLine = parseInt(lineParts[0], 10);
+          }
+        }
+        return {
+          code: result.code,
+          content: result.content,
+          relevanceScore: result.relevanceScore,
+          source: {
+            repository: result.source.repository,
+            filePath: result.source.filePath,
+            startLine,
+            endLine,
+            lines: result.source.lines,
+            section: result.source.section,
+          },
+          codeType: result.codeType,
+          name: result.name,
+          isExported: result.isExported,
+        };
+      }),
       totalResults: finalResponse.totalResults ?? finalResponse.results.length,
       warnings: warnings.length > 0 ? warnings : undefined,
     });

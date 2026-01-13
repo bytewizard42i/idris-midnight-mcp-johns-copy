@@ -206,7 +206,12 @@ export interface SearchCacheResult {
       filePath: string;
       startLine?: number;
       endLine?: number;
+      lines?: string;
+      section?: string;
     };
+    codeType?: string;
+    name?: string;
+    isExported?: boolean;
   }>;
   totalResults: number;
   warnings?: string[];
