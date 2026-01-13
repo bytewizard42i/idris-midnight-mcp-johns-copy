@@ -5,6 +5,7 @@
 
 export {
   isSamplingAvailable,
+  markSamplingFailed,
   registerSamplingCallback,
   requestCompletion,
   generateContract,

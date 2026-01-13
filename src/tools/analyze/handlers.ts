@@ -153,10 +153,21 @@ export async function explainCircuit(input: ExplainCircuitInput) {
   const circuit = parsed.codeUnits.find((u) => u.type === "circuit");
 
   if (!circuit) {
+    // Return a valid response matching the output schema even for errors
     return {
-      error: "No circuit definition found in the provided code",
-      suggestion:
-        "Make sure to provide a complete circuit definition including 'circuit' keyword",
+      circuitName: "unknown",
+      isPublic: false,
+      parameters: [],
+      returnType: "unknown",
+      explanation:
+        "No circuit definition found in the provided code. Make sure to provide a complete circuit definition including the 'circuit' keyword.",
+      operations: [],
+      zkImplications: [
+        "Unable to analyze - no valid circuit found in the provided code",
+      ],
+      privacyConsiderations: [
+        "Provide a complete circuit definition for privacy analysis",
+      ],
     };
   }
 

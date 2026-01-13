@@ -588,6 +588,33 @@ function registerResourceHandlers(server: Server): void {
           "midnight://schema/",
         ];
         const validPrefix = resourceTypes.find((p) => uri.startsWith(p));
+
+        // Try to suggest correct URI for common mistakes
+        let suggestion = validPrefix
+          ? `Check the resource path after '${validPrefix}'`
+          : `Valid resource prefixes: ${resourceTypes.join(", ")}`;
+
+        // Handle common URI mistakes
+        if (uri.includes("://resources/")) {
+          const resourceName = uri.split("://resources/").pop() || "";
+          // Suggest the correct prefix based on content type
+          if (
+            resourceName.includes("template") ||
+            resourceName.includes("pattern") ||
+            resourceName.includes("example")
+          ) {
+            suggestion = `Try: midnight://code/templates/${resourceName} or midnight://code/examples/${resourceName} or midnight://code/patterns/${resourceName}`;
+          } else if (
+            resourceName.includes("doc") ||
+            resourceName.includes("reference") ||
+            resourceName.includes("guide")
+          ) {
+            suggestion = `Try: midnight://docs/${resourceName}`;
+          } else {
+            suggestion = `'midnight://resources/' is not valid. Use: midnight://docs/, midnight://code/, or midnight://schema/`;
+          }
+        }
+
         return {
           contents: [
             {
@@ -595,10 +622,9 @@ function registerResourceHandlers(server: Server): void {
               mimeType: "application/json",
               text: serialize({
                 error: `Resource not found: ${uri}`,
-                suggestion: validPrefix
-                  ? `Check the resource path after '${validPrefix}'`
-                  : `Valid resource prefixes: ${resourceTypes.join(", ")}`,
+                suggestion,
                 hint: "Use ListResources to see all available resources",
+                validPrefixes: resourceTypes,
               }),
             },
           ],

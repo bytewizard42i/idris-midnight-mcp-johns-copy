@@ -21,11 +21,26 @@ type SamplingCallback = (request: SamplingRequest) => Promise<SamplingResponse>;
 // Store for the sampling callback
 let samplingCallback: SamplingCallback | null = null;
 
+// Track if sampling has been verified to work
+let samplingVerified = false;
+let samplingFailedPermanently = false;
+
 /**
  * Check if sampling is available
  */
 export function isSamplingAvailable(): boolean {
+  // If we've already verified sampling works, return true
+  // If we know it failed permanently, return false
+  if (samplingFailedPermanently) return false;
   return samplingCallback !== null;
+}
+
+/**
+ * Mark sampling as permanently failed (client doesn't support it)
+ */
+export function markSamplingFailed(): void {
+  samplingFailedPermanently = true;
+  logger.warn("Sampling marked as permanently unavailable for this session");
 }
 
 /**
@@ -34,6 +49,8 @@ export function isSamplingAvailable(): boolean {
  */
 export function registerSamplingCallback(callback: SamplingCallback): void {
   samplingCallback = callback;
+  samplingVerified = false;
+  samplingFailedPermanently = false;
   logger.info("Sampling capability registered");
 }
 
@@ -49,7 +66,7 @@ export async function requestCompletion(
     modelPreferences?: ModelPreferences;
   } = {}
 ): Promise<string> {
-  if (!samplingCallback) {
+  if (!samplingCallback || samplingFailedPermanently) {
     throw new Error(
       "Sampling not available - client does not support this capability"
     );
@@ -75,13 +92,37 @@ export async function requestCompletion(
     maxTokens: request.maxTokens,
   });
 
-  const response = await samplingCallback(request);
+  try {
+    const response = await samplingCallback(request);
 
-  if (response.content.type !== "text") {
-    throw new Error("Unexpected response content type");
+    if (response.content.type !== "text") {
+      throw new Error("Unexpected response content type");
+    }
+
+    // Mark sampling as verified working
+    samplingVerified = true;
+
+    return response.content.text;
+  } catch (error) {
+    const errorStr = String(error);
+
+    // Check for "Method not found" error which indicates client doesn't support sampling
+    if (
+      errorStr.includes("-32601") ||
+      errorStr.includes("Method not found") ||
+      errorStr.includes("not supported")
+    ) {
+      logger.warn(
+        "Client does not support sampling/createMessage, disabling sampling for this session"
+      );
+      markSamplingFailed();
+      throw new Error(
+        "Sampling not supported by this client - use Claude Desktop for this feature"
+      );
+    }
+
+    throw error;
   }
-
-  return response.content.text;
 }
 
 /**
