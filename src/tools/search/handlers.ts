@@ -83,12 +83,13 @@ function validateSearchInput(
 
 /**
  * Check cache for existing search results
+ * Returns the cached result if found and valid
  */
-function checkSearchCache<T>(cacheKey: string): T | null {
+function checkSearchCache(cacheKey: string) {
   const cached = searchCache.get(cacheKey);
   if (cached) {
     logger.debug("Search cache hit", { cacheKey });
-    return cached as T;
+    return cached;
   }
   return null;
 }
@@ -96,7 +97,9 @@ function checkSearchCache<T>(cacheKey: string): T | null {
 /**
  * Execute hosted search with fallback handling
  */
-async function tryHostedSearch<T>(
+async function tryHostedSearch<
+  T extends { results: unknown[]; totalResults?: number },
+>(
   searchType: string,
   hostedSearchFn: () => Promise<T>,
   cacheKey: string,
@@ -112,7 +115,66 @@ async function tryHostedSearch<T>(
       ...response,
       ...(warnings.length > 0 && { warnings }),
     } as T;
-    searchCache.set(cacheKey, finalResponse);
+    // Cache with proper mapping that preserves all metadata
+    searchCache.set(cacheKey, {
+      results: finalResponse.results.map((item) => {
+        // Type assertion for hosted search result structure
+        const result = item as {
+          code?: string;
+          content?: string;
+          relevanceScore: number;
+          source: {
+            repository: string;
+            filePath: string;
+            lines?: string;
+            section?: string;
+          };
+          codeType?: string;
+          name?: string;
+          isExported?: boolean;
+        };
+
+        // Parse lines string (e.g., "10-20") into numeric startLine/endLine
+        let startLine: number | undefined;
+        let endLine: number | undefined;
+        if (result.source.lines) {
+          const lineParts = result.source.lines.split("-");
+          if (lineParts.length === 2) {
+            const parsedStart = parseInt(lineParts[0], 10);
+            const parsedEnd = parseInt(lineParts[1], 10);
+            if (!Number.isNaN(parsedStart)) {
+              startLine = parsedStart;
+            }
+            if (!Number.isNaN(parsedEnd)) {
+              endLine = parsedEnd;
+            }
+          } else if (lineParts.length === 1) {
+            const parsed = parseInt(lineParts[0], 10);
+            if (!Number.isNaN(parsed)) {
+              startLine = endLine = parsed;
+            }
+          }
+        }
+        return {
+          code: result.code,
+          content: result.content,
+          relevanceScore: result.relevanceScore,
+          source: {
+            repository: result.source.repository,
+            filePath: result.source.filePath,
+            startLine,
+            endLine,
+            lines: result.source.lines,
+            section: result.source.section,
+          },
+          codeType: result.codeType,
+          name: result.name,
+          isExported: result.isExported,
+        };
+      }),
+      totalResults: finalResponse.totalResults ?? finalResponse.results.length,
+      warnings: warnings.length > 0 ? warnings : undefined,
+    });
     return {
       result: finalResponse,
       cached: true,
@@ -131,16 +193,24 @@ async function tryHostedSearch<T>(
 /**
  * Add warnings to response and cache it
  */
-function finalizeResponse<T extends object>(
-  response: T,
-  cacheKey: string,
-  warnings: string[]
-): T {
+function finalizeResponse<
+  T extends { results: unknown[]; totalResults?: number },
+>(response: T, cacheKey: string, warnings: string[]): T {
   const finalResponse = {
     ...response,
     ...(warnings.length > 0 && { warnings }),
   };
-  searchCache.set(cacheKey, finalResponse);
+  // Cache with correct structure
+  searchCache.set(cacheKey, {
+    results: finalResponse.results as Array<{
+      code?: string;
+      content?: string;
+      relevanceScore: number;
+      source: { repository: string; filePath: string };
+    }>,
+    totalResults: finalResponse.totalResults ?? finalResponse.results.length,
+    warnings: warnings.length > 0 ? warnings : undefined,
+  });
   return finalResponse;
 }
 
