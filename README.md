@@ -167,17 +167,24 @@ Quick references available offline:
 
 ## Indexed Repositories
 
-The API indexes **39 Midnight repositories**:
+The API indexes **102+ Midnight repositories** from the entire Midnight ecosystem:
 
-| Category              | Repositories                                                                                                                                                           |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Core**              | `compact`, `midnight-js`, `midnight-wallet`, `midnight-docs`, `midnight-node`, `midnight-indexer`, `midnight-ledger`, `midnight-zk`                                    |
-| **Examples**          | `example-counter`, `example-bboard`, `example-dex`, `create-mn-app`                                                                                                    |
-| **Infrastructure**    | `midnight-node-docker`, `midnight-dapp-connector-api`, `compact-tree-sitter`, `setup-compact-action`                                                                   |
-| **Partner Libraries** | `OpenZeppelin/compact-contracts`, `OpenZeppelin/midnight-apps` (LunarSwap)                                                                                             |
-| **Official Partners** | `bricktowers/midnight-seabattle`, `bricktowers/midnight-identity`, `bricktowers/midnight-rwa`, `MeshJS/midnight-starter-template`, `midnames/core`                     |
-| **Core Partner**      | `PaimaStudios/midnight-game-2`, `PaimaStudios/midnight-wasm-prover`, `PaimaStudios/midnight-batcher`, `PaimaStudios/midnight-impact-rps-example`                       |
-| **Hackathon Winners** | Sea Battle: `ErickRomeroDev/naval-battle-game_v2`, `eddex/midnight-sea-battle-hackathon` • Mini DApp: `statera-protocol`, `nel349/midnight-bank`, `Imdavyking/zkbadge` |
+| Category                 | Count | Key Repositories                                                                 |
+| ------------------------ | ----- | -------------------------------------------------------------------------------- |
+| **Compact Language**     | 6     | `compact`, `compact-lsp`, `compact-tree-sitter`, `compact-zed`                   |
+| **SDKs & APIs**          | 5     | `midnight-js`, `midnight-sdk`, `midnight-wallet`, `midnight-dapp-connector`      |
+| **Core Infrastructure**  | 9     | `midnight-node`, `midnight-indexer`, `midnight-ledger`, `midnight-zk`            |
+| **ZK & Cryptography**    | 6     | `midnight-trusted-setup`, `fri`, `galois_recursion`, `pluto_eris`                |
+| **Documentation**        | 5     | `midnight-docs`, `midnight-improvement-proposals`, `midnight-architecture`       |
+| **Examples & Templates** | 8     | `example-counter`, `example-bboard`, `example-dex`, `example-DAO`                |
+| **Identity**             | 5     | `midnight-did`, `midnight-did-resolver`, `midnight-verifiable-credentials`       |
+| **Developer Tools**      | 4     | `setup-compact-action`, `upload-sarif-github-action`, `midnight-dev-utils`       |
+| **Solutions & Apps**     | 7     | `midnight-solutions`, `midnight-website-next`, `nightcap`, `ocp`                 |
+| **Glacier Drop**         | 15    | `midnight-glacier-drop-tools`, `gd-claim-api`, `gd-claim-portal`                 |
+| **Partners**             | 14    | OpenZeppelin, BrickTowers, MeshJS, PaimaStudios, hackathon winners               |
+| **Other**                | 18+   | Contracts, bridges, token distribution, monitoring, QA tools, community projects |
+
+All **non-archived** repositories from the `midnightntwrk` organization plus community partners. See [api/README.md](api/README.md#indexed-repositories-102) for the complete list.
 
 ---
 
