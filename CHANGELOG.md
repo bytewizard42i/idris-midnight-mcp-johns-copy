@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.9] - 2026-01-14
+
 ### Added
 
 - **Expanded Repository Indexing** - Now indexing 102 repositories (88 midnightntwrk + 14 community)
@@ -14,6 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 14 community/partner repos (OpenZeppelin, BrickTowers, PaimaStudios, hackathon winners)
   - Correct default branches for all repos (main, master, dev, develop, gh-pages, PoUW)
   - Requires `MIDNIGHT_GITHUB_TOKEN` secret with org access for private repos
+
+### Fixed
+
+- **Security & Type Safety Improvements**
+  - Added regex injection prevention with `escapeRegex()` helper in contract validation
+  - Fixed cache mapping to properly preserve `HostedSearchResult` metadata (codeType, name, isExported, section)
+  - Added validation for `parseInt()` results in line number parsing to prevent NaN assignment
+  - Added typed cache interfaces (`SearchCacheResult`, `MetadataCacheEntry`)
+  - Fixed NDJSON sanitization for Vectorize API to handle control characters
+
+### Changed
+
+- **Code Quality Improvements**
+  - Added language constants (`LANGUAGES`, `EXTENSION_LANGUAGE_MAP`) to parser
+  - Improved handler type documentation with explanation of Zod validation
+  - Replaced `any` types with proper typed interfaces throughout handlers
 
 ## [0.2.8] - 2026-01-13
 
