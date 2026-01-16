@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.11] - 2026-01-16
+
+### Fixed
+
+- **Health Check Version** - Fixed version reporting in health check endpoint
+  - Was showing hardcoded fallback `0.0.3` instead of actual package version
+  - Now reads version directly from package.json for accurate reporting
+
 ## [0.2.10] - 2026-01-16
 
 ### Added
