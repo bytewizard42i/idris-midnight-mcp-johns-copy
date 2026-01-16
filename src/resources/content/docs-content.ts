@@ -595,6 +595,155 @@ try {
 \`\`\`
 `,
 
+  "midnight://docs/compiler": `# Compact Compiler Guide
+
+**Source:** [Building a Midnight DApp](https://docs.midnight.network/develop/tutorial/building)
+
+## Compiling Contracts
+
+> **IMPORTANT:** The old \`compactc\` command is deprecated. Use \`compact compile\` instead.
+
+### Basic Usage
+
+\`\`\`bash
+# Syntax: compact compile <source.compact> <output_directory>
+compact compile src/counter.compact managed/counter
+
+# With environment setup
+nvm use 18
+compact compile contract/src/mycontract.compact managed/mycontract
+\`\`\`
+
+### Compiler Output Structure
+
+**Source:** [Generated Source Details](https://docs.midnight.network/develop/tutorial/building/dapp-details#generated-source)
+
+When you compile a \`.compact\` file, the compiler generates this directory structure:
+
+\`\`\`
+managed/<contract_name>/
+├── contract/                 # TypeScript bindings
+│   ├── index.cjs             # CommonJS module with Contract class
+│   ├── index.d.cts           # TypeScript type declarations
+│   └── index.mjs             # ESM module (optional)
+│
+├── zkir/                     # Zero-knowledge circuit representations
+│   └── <circuit_name>.zkir   # Circuit intermediate representation
+│
+├── keys/                     # Proving and verifying keys
+│   ├── <circuit>.prover      # Prover key (used client-side)
+│   └── <circuit>.verifier    # Verifier key (used on-chain)
+│
+└── compiler/                 # Compilation metadata
+    └── metadata.json         # Version info, circuit IDs, etc.
+\`\`\`
+
+### Understanding Generated Files
+
+#### contract/ - TypeScript Bindings
+
+The \`contract/\` directory contains your TypeScript interface:
+
+\`\`\`typescript
+// Import from generated bindings
+import { Contract, ledger } from './managed/counter/contract/index.cjs';
+
+// Create contract instance
+const contract = new Contract(witnesses);
+
+// Access circuits
+const tx = await contract.impureCircuits.increment(5n);
+
+// Read ledger state
+const state = ledger(contractState);
+console.log('Counter value:', state.counter);
+\`\`\`
+
+#### keys/ - ZK Proving/Verifying Keys
+
+- **\`.prover\`** - Used by the client to generate proofs (can be large, 10-100MB+)
+- **\`.verifier\`** - Used on-chain to verify proofs (small, kilobytes)
+
+\`\`\`typescript
+// Keys are loaded automatically by the SDK
+import { proverKey, verifierKey } from './managed/counter/keys';
+
+// Or loaded from files
+const prover = await fs.readFile('managed/counter/keys/increment.prover');
+\`\`\`
+
+#### zkir/ - Circuit Intermediate Representation
+
+The \`.zkir\` files are internal representations used by the proof system. You typically don't interact with these directly.
+
+### Cleaning and Rebuilding
+
+When updating contracts or after Compact version changes:
+
+\`\`\`bash
+# Clean generated files
+rm -rf managed/<contract_name>
+
+# Or clean specific artifacts
+rm -rf managed/counter/keys/*.prover managed/counter/keys/*.verifier
+
+# Rebuild
+compact compile src/counter.compact managed/counter
+\`\`\`
+
+### Common Compilation Errors
+
+#### "invalid context for a ledger ADT type"
+
+Ledger ADT types cannot be used in type casts:
+
+\`\`\`compact
+// ❌ Wrong
+const x = value as Counter;
+
+// ✅ Correct - use ledger field directly
+ledger.counter.increment(1);
+\`\`\`
+
+#### Version Mismatch After Update
+
+When runtime versions don't match compiled artifacts:
+
+\`\`\`bash
+# 1. Check versions
+compact --version
+npm list @midnight-ntwrk/compact-runtime
+
+# 2. Consult compatibility matrix
+# https://docs.midnight.network/relnotes/support-matrix
+
+# 3. Clean and recompile
+rm -rf managed/
+compact compile src/contract.compact managed/contract
+\`\`\`
+
+### Integration with Build Tools
+
+#### package.json scripts
+
+\`\`\`json
+{
+  "scripts": {
+    "compile": "compact compile src/contract.compact managed/contract",
+    "compile:clean": "rm -rf managed && npm run compile",
+    "build": "npm run compile && tsc"
+  }
+}
+\`\`\`
+
+#### Watch mode (development)
+
+\`\`\`bash
+# Using nodemon or similar
+nodemon --watch src/*.compact --exec "compact compile src/contract.compact managed/contract"
+\`\`\`
+`,
+
   "midnight://docs/openzeppelin": `# OpenZeppelin Contracts for Compact
 
 > **Official Documentation**: https://docs.openzeppelin.com/contracts-compact
@@ -1246,8 +1395,15 @@ try {
 2. **Discord:** #developer-support channel
 3. **Recompile after updates:**
    \`\`\`bash
-   rm -rf contract/*.cjs contract/*.prover contract/*.verifier
-   compact compile src/contract.compact contract/
+   # Clean generated files (use managed/ directory structure)
+   rm -rf managed/<contract_name>
+   
+   # Or clean specific artifacts
+   rm -rf managed/counter/keys/*.prover managed/counter/keys/*.verifier
+   
+   # Rebuild
+   compact compile src/contract.compact managed/contract
    \`\`\`
+4. **Compiler output docs:** See \`midnight://docs/compiler\` for full directory structure
 `,
 };
