@@ -114,6 +114,14 @@ ledger privateData: Field;                 // Private, not exported
 | \`Uint<N>\` | Unsigned integer (N = 8, 16, 32, 64, 128, 256) | \`balance: Uint<64>\` |
 | \`Uint<MIN..MAX>\` | Bounded unsigned integer | \`score: Uint<0..100>\` |
 
+**⚠️ Uint Type Equivalence:** \`Uint<N>\` (sized) and \`Uint<0..MAX>\` (bounded) are the **SAME type family**.
+\`Uint<N>\` is exactly equivalent to \`Uint<0..(2^N - 1)>\`:
+- \`Uint<8>\` = \`Uint<0..255>\` (2^8 - 1 = 255)
+- \`Uint<16>\` = \`Uint<0..65535>\` (2^16 - 1 = 65535)
+- \`Uint<64>\` = \`Uint<0..18446744073709551615>\`
+
+These can be used interchangeably - they are **not** separate types.
+
 ### Collection Types
 | Type | Description | Example |
 |------|-------------|---------|
