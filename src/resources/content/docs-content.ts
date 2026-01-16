@@ -63,12 +63,14 @@ Always import the standard library:
 import CompactStandardLibrary;
 \`\`\`
 
-For multi-file contracts, use \`include\`:
+For modular code, use module imports (not a separate \`include\` directive):
 \`\`\`compact
-include "types";
-include "ledger";
-include "circuits";
+import "path/to/module";
+import { SomeType } from "other/module";
 \`\`\`
+
+> **Note:** The docs describe modules and \`import\` syntax, but do not document
+> a separate \`include\` directive. Use \`import\` for code organization.
 
 ---
 
