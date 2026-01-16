@@ -113,16 +113,23 @@ ledger privateData: Field;                 // Private, not exported
 | \`Field\` | Finite field element (basic numeric) | \`amount: Field\` |
 | \`Boolean\` | True or false | \`isActive: Boolean\` |
 | \`Bytes<N>\` | Fixed-size byte array | \`hash: Bytes<32>\` |
-| \`Uint<N>\` | Unsigned integer (N = 8, 16, 32, 64, 128, 256) | \`balance: Uint<64>\` |
-| \`Uint<MIN..MAX>\` | Bounded unsigned integer | \`score: Uint<0..100>\` |
+| \`Uint<N>\` | Unsigned integer (N bits) | \`balance: Uint<64>\` |
+| \`Uint<0..MAX>\` | Bounded unsigned integer | \`score: Uint<0..100>\` |
 
-**⚠️ Uint Type Equivalence:** \`Uint<N>\` (sized) and \`Uint<0..MAX>\` (bounded) are the **SAME type family**.
+**⚠️ Uint Type Equivalence** (documented in [Primitive Types](https://docs.midnight.network/develop/reference/compact/lang-ref#primitive-types)):
+
+\`Uint<N>\` (sized) and \`Uint<0..MAX>\` (bounded) are the **SAME type family**.
 \`Uint<N>\` is exactly equivalent to \`Uint<0..(2^N - 1)>\`:
 - \`Uint<8>\` = \`Uint<0..255>\` (2^8 - 1 = 255)
 - \`Uint<16>\` = \`Uint<0..65535>\` (2^16 - 1 = 65535)
 - \`Uint<64>\` = \`Uint<0..18446744073709551615>\`
 
-These can be used interchangeably - they are **not** separate types.
+These can be used interchangeably. The lower bound must currently be 0.
+
+**Arithmetic** (documented in [Binary Arithmetic](https://docs.midnight.network/develop/reference/compact/lang-ref#binary-arithmetic-expressions)):
+- Operators: \`+\`, \`-\`, \`*\` only (division is NOT mentioned in docs)
+- Result types expand: \`Uint<0..m> + Uint<0..n>\` → \`Uint<0..m+n>\`
+- Subtraction can fail at runtime if result would be negative
 
 ### Collection Types
 | Type | Description | Example |

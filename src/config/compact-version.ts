@@ -190,8 +190,15 @@ witness get_random_value(): Field;`,
 
 /**
  * Type compatibility rules - what types can be compared/operated together
+ *
+ * SOURCE NOTES:
+ * - Comparisons: Standard operators (==, !=, <, <=, >, >=) are used in examples
+ *   but the exact operator set is not explicitly documented in the language reference.
+ * - Arithmetic: Only +, -, * are documented. Division (/) is NOT mentioned.
+ *   See: https://docs.midnight.network/develop/reference/compact/lang-ref#binary-arithmetic-expressions
  */
 export const TYPE_COMPATIBILITY = {
+  // Note: Comparison operators work in practice but aren't explicitly listed in docs
   comparisons: [
     { types: "Field == Field", works: true, note: "Direct comparison" },
     {
