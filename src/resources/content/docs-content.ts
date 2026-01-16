@@ -366,27 +366,19 @@ counter.resetToDefault();       // Reset to zero
 
 ### Map Operations
 \`\`\`compact
-// These work in circuits:
-balances.insert(address, 100);
-balances.remove(address);
-
-// ⚠️ DOES NOT WORK IN CIRCUITS:
-// const balance = balances.lookup(address);  // ERROR
-// const exists = balances.member(address);   // ERROR
-// Instead, use witnesses to read values:
-witness get_balance(addr: Bytes<32>): Uint<64>;
+// All these work in circuits:
+balances.insert(address, 100);      // Insert/update key-value
+balances.remove(address);           // Remove key
+const balance = balances.lookup(address);  // ✅ Get value (returns value type)
+const exists = balances.member(address);   // ✅ Check if key exists (returns Boolean)
 \`\`\`
 
 ### Set Operations
 \`\`\`compact
-// These work in circuits:
-members.insert(address);
-members.remove(address);
-
-// ⚠️ DOES NOT WORK IN CIRCUITS:
-// const isMember = members.member(address);  // ERROR
-// Use witness instead:
-witness is_member(addr: Bytes<32>): Boolean;
+// All these work in circuits:
+members.insert(address);                    // Add to set
+members.remove(address);                    // Remove from set
+const isMember = members.member(address);   // ✅ Check membership (returns Boolean)
 \`\`\`
 
 ### Maybe Operations
