@@ -3,6 +3,19 @@
  *
  * MAINTAINER: Update these values when Compact language syntax changes!
  * See docs/SYNTAX_MAINTENANCE.md for the full update checklist.
+ *
+ * ⚠️ ARCHITECTURAL NOTE: This file contains STATIC/HARDCODED syntax information.
+ * The MCP indexes 102+ repos including midnight-docs, but this file doesn't
+ * automatically validate against those indexed docs.
+ *
+ * TODO: Add validation that cross-references this static content against
+ * indexed documentation to catch outdated information. Options:
+ * 1. Pre-publish script that searches docs for ADT methods and validates
+ * 2. Runtime validation on first syntax tool call
+ * 3. CI test that compares LEDGER_TYPE_LIMITS against indexed docs
+ *
+ * Source of truth for ADT operations:
+ * https://docs.midnight.network/develop/reference/compact/ledger-adt
  */
 
 /**
@@ -265,18 +278,31 @@ export const TYPE_COMPATIBILITY = {
 export const LEDGER_TYPE_LIMITS = {
   Counter: {
     circuitOperations: [
-      { method: ".increment(n)", works: true, note: "Adds n to counter" },
+      {
+        method: ".increment(n)",
+        works: true,
+        note: "Increase counter by n (Uint<16>)",
+      },
       {
         method: ".decrement(n)",
         works: true,
-        note: "Subtracts n from counter",
+        note: "Decrease counter by n (Uint<16>)",
       },
-      { method: ".resetToDefault()", works: true, note: "Resets to 0" },
-      { method: ".value()", works: false, note: "NOT available in circuits" },
+      {
+        method: ".read()",
+        works: true,
+        note: "Get current value (returns Uint<64>)",
+      },
+      {
+        method: ".lessThan(n)",
+        works: true,
+        note: "Compare with threshold (returns Boolean)",
+      },
+      { method: ".resetToDefault()", works: true, note: "Reset to 0" },
     ],
     typescriptAccess:
       "Access counter value via `ledgerState.counter` in TypeScript SDK",
-    reason: "ZK circuits cannot read current ledger state - only modify it",
+    note: "All Counter operations work in circuits. Use .read() to get value, NOT .value()",
   },
   Map: {
     circuitOperations: [
