@@ -563,15 +563,12 @@ export async function validateTypeCompatibility(
 
       // Check for any rules that contradict our static data
       for (const rule of staticRules) {
-        const typeA = rule.types
-          .split(/[=<>+*]/)[0]
-          .trim()
-          .toLowerCase();
-        const typeB = rule.types
-          .split(/[=<>+*]/)
-          .pop()
-          ?.trim()
-          .toLowerCase();
+        // Use regex to properly extract types with generics (e.g., "Uint<64> == Uint<64>")
+        const typeMatch = rule.types.match(
+          /^\s*(.+?)\s*(?:==|=|<=|>=|<|>|[+*])\s*(.+?)\s*$/
+        );
+        const typeA = typeMatch?.[1]?.trim().toLowerCase();
+        const typeB = typeMatch?.[2]?.trim().toLowerCase();
 
         if (typeA && typeB) {
           // If doc says these types work together but we say they don't

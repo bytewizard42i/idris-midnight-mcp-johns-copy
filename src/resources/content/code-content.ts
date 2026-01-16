@@ -116,7 +116,7 @@ import CompactStandardLibrary;
 // - Visible in blockchain explorers
 // - Can be queried by anyone
 
-export ledger totalSupply: Counter;
+export ledger totalSupply: Uint<64>;
 export ledger publicConfig: Field;
 
 // PRIVATE STATE
@@ -133,7 +133,7 @@ witness getPrivateBalance(user: Opaque<"address">): Field;
 
 // Reading public state is straightforward
 export circuit getTotalSupply(): Uint<64> {
-  return totalSupply.read();
+  return ledger.totalSupply;
 }
 
 // Using private state in a circuit
@@ -329,7 +329,7 @@ import CompactStandardLibrary;
 export ledger name: Bytes<32>;
 export ledger symbol: Bytes<8>;
 export ledger decimals: Uint<8>;
-export ledger totalSupply: Counter;
+export ledger totalSupply: Uint<64>;
 
 // Private balances
 ledger balances: Map<Opaque<"address">, Uint<64>>;
@@ -364,11 +364,16 @@ export circuit revealMyBalance(): Uint<64> {
   return disclose(balance);
 }
 
+// Get total supply
+witness getTotalSupply(): Uint<64> {
+  return ledger.totalSupply;
+}
+
 // Mint new tokens (admin only)
 export circuit mint(to: Opaque<"address">, amount: Uint<64>): Boolean {
   // Add access control in production
   balances.insert(to, getBalance(to) + amount);
-  totalSupply.increment(1);
+  ledger.totalSupply = getTotalSupply() + amount;
   return true;
 }
 `,
@@ -382,11 +387,11 @@ import CompactStandardLibrary;
 
 // Public: proposal metadata
 export ledger proposalCount: Counter;
-export ledger proposals: Map<Uint<32>, Bytes<256>>;
-export ledger votingDeadlines: Map<Uint<32>, Uint<64>>;
+export ledger proposals: Map<Uint<64>, Bytes<256>>;
+export ledger votingDeadlines: Map<Uint<64>, Uint<64>>;
 
 // Private: individual votes
-ledger votes: Map<Uint<32>, Map<Opaque<"address">, Uint<8>>>;
+ledger votes: Map<Uint<64>, Map<Opaque<"address">, Uint<8>>>;
 
 // Nullifiers to prevent double voting
 export ledger voteNullifiers: Set<Bytes<32>>;
@@ -397,8 +402,8 @@ export ledger eligibleVoters: Set<Opaque<"address">>;
 // Witnesses
 witness getCaller(): Opaque<"address">;
 witness getCurrentTime(): Uint<64>;
-witness getVote(proposalId: Uint<32>, voter: Opaque<"address">): Uint<8>;
-witness computeNullifier(voter: Opaque<"address">, proposalId: Uint<32>): Bytes<32>;
+witness getVote(proposalId: Uint<64>, voter: Opaque<"address">): Uint<8>;
+witness computeNullifier(voter: Opaque<"address">, proposalId: Uint<64>): Bytes<32>;
 
 // Create a new proposal
 export circuit createProposal(
@@ -417,7 +422,7 @@ export circuit createProposal(
 
 // Cast a private vote
 export circuit vote(
-  proposalId: Uint<32>,
+  proposalId: Uint<64>,
   option: Uint<8>
 ): Boolean {
   const voter = getCaller();
