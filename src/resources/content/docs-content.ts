@@ -141,7 +141,14 @@ These can be used interchangeably. The lower bound must currently be 0.
 | \`List<T>\` | Dynamic list | \`List<Bytes<32>>\` |
 | \`Maybe<T>\` | Optional value | \`Maybe<Bytes<32>>\` |
 | \`Either<L, R>\` | Union type | \`Either<Field, Bytes<32>>\` |
-| \`Opaque<"type">\` | External type from TypeScript | \`Opaque<"string">\` |
+| \`Opaque<s>\` | Opaque value tagged by string s | \`Opaque<"string">\` |
+
+**Opaque Types** ([Primitive Types](https://docs.midnight.network/develop/reference/compact/lang-ref#primitive-types)):
+- Only two tags allowed: \`Opaque<"string">\` and \`Opaque<"Uint8Array">\`
+- Opaque values can be manipulated in witnesses but are opaque to circuits
+- In circuits, they are represented as their hash (cannot inspect content)
+- In your DApp's JS/TS, they are just \`string\` or \`Uint8Array\`
+- On-chain, they are stored as bytes/UTF-8 (not encrypted)
 
 ### Custom Types
 

@@ -117,13 +117,18 @@ export function isVersionSupported(version: string): boolean {
 /**
  * Built-in functions vs patterns you must implement yourself
  * CRITICAL: These are the actual stdlib functions available in Compact
+ *
+ * NOTE: The exact generic signatures (e.g., persistentHash<T>) are inferred from
+ * usage patterns in docs/examples. The stdlib overview confirms these functions
+ * exist but doesn't provide full type signatures.
+ * See: https://docs.midnight.network/develop/reference/compact/compact-std-library
  */
 export const BUILTIN_FUNCTIONS = {
   /** Actually built into the language/stdlib */
   stdlib: [
     {
       name: "persistentHash",
-      signature: "persistentHash<T>(value: T): Bytes<32>",
+      signature: "persistentHash<T>(value: T): Bytes<32>", // Signature inferred from examples
       description:
         "Poseidon hash that produces consistent results across calls",
     },
@@ -217,7 +222,11 @@ export const TYPE_COMPATIBILITY = {
       works: true,
       note: "Bounded integers",
     },
-    { types: "Bytes<32> == Bytes<32>", works: true, note: "Direct comparison" },
+    {
+      types: "Bytes<32> == Bytes<32>",
+      works: true,
+      note: "Used in examples, but operators not explicitly listed in docs",
+    },
     { types: "Boolean == Boolean", works: true, note: "Direct comparison" },
   ],
   arithmetic: [
