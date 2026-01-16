@@ -434,11 +434,37 @@ if (opt.is_some) {
 }
 \`\`\`
 
-### Type Casting
+### Type Casting ([Type Casts Reference](https://docs.midnight.network/develop/reference/compact/lang-ref#type-cast-expressions))
+
+**Syntax**: \`expression as Type\` (only form; \`<Type>expression\` is NOT supported)
+
+**Cast kinds**: static (always succeeds), conversion (semantic change), checked (can fail at runtime)
+
 \`\`\`compact
-const bytes: Bytes<32> = myField as Bytes<32>;  // Field to Bytes
-const num: Uint<64> = myField as Uint<64>;      // Field to Uint (bounds not checked!)
-const field: Field = myUint as Field;           // Uint to Field (safe)
+// Uint ↔ Field (safe)
+const field: Field = myUint as Field;           // static: always succeeds
+const num: Uint<64> = myField as Uint<64>;      // checked: fails if out of range
+
+// Uint widening/narrowing
+const big: Uint<64> = small as Uint<64>;        // static: widening always works
+const small: Uint<32> = big as Uint<32>;        // checked: narrowing can fail
+
+// Field ↔ Bytes (can fail at runtime!)
+const bytes: Bytes<32> = myField as Bytes<32>;  // conversion: fails if doesn't fit
+const field: Field = myBytes as Field;          // conversion: fails if exceeds max Field
+
+// Uint → Bytes (NOT direct - use two casts)
+const amount_bytes = (amount as Field) as Bytes<32>;
+
+// Boolean → Uint (conversion: false→0, true→1)
+const flag: Boolean = true;
+const flagInt: Uint<0..1> = flag as Uint<0..1>;
+
+// Enum → Field (conversion)
+const index: Field = choice as Field;
+
+// ⚠️ Boolean → Field is NOT allowed!
+// Must go through Uint: (flag as Uint<0..1>) as Field
 \`\`\`
 
 ### Hashing
