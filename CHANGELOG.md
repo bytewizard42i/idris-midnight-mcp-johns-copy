@@ -24,12 +24,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Counter ADT uses `.read()` to get current value, NOT `.value()` (which never existed)
   - Updated across all documentation, error messages, and static references
 
+- **Import Syntax** - Replaced undocumented `include` directive with official `import` syntax
+  - Changed `include "std"` to `import CompactStandardLibrary;`
+  - Updated all OpenZeppelin examples to use `import "path" prefix Name_;` syntax
+  - Parser now supports both `import` (new) and `include` (legacy) for backwards compatibility
+
+- **Code Examples** - Fixed multiple issues in embedded code templates
+  - Token template: Changed `totalSupply` from `Counter` to `Uint<64>` for accurate tracking
+  - Token `mint()`: Now uses `totalSupply += amount` instead of `totalSupply.increment(1)`
+  - Voting template: Fixed `proposalId` type mismatch (`Uint<64>` vs `Uint<32>`)
+  - Map keys now use `Uint<64>` to match `Counter.read()` return type
+
+- **Documentation Accuracy**
+  - Added Uint type equivalence explanation (`Uint<N>` = `Uint<0..(2^N-1)>`)
+  - Resolved Map/Set circuit availability contradiction (both work in circuits)
+  - Added complete Map/Set ADT operations from official docs (insertDefault, isEmpty, size, etc.)
+  - Fixed bigint literals in examples (`1n` → `1` for Compact compatibility)
+
+- **Syntax Validator** - Fixed type extraction regex for generic types
+  - Old `split(/[=<>+*]/)` broke on `Uint<64>` angle brackets
+  - New regex properly captures full types like `Uint<64> == Uint<64>`
+
 ### Changed
 
 - **Architecture Improvement** - Static syntax data is now always validated against indexed docs
   - Previously, `midnight-get-latest-syntax` returned hardcoded static content without verification
   - Now performs hybrid validation: static (fast) + indexed (correct) = best of both
   - `LedgerADTOperations` interface added for type safety in compact-version.ts
+  - Added missing operations to `LEDGER_TYPE_LIMITS` to match documentation
 
 ## [0.2.9] - 2026-01-14
 
