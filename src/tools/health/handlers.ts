@@ -17,6 +17,7 @@ import type {
   GetStatusInput,
   CheckVersionInput,
   AutoUpdateConfigInput,
+  GetUpdateInstructionsInput,
 } from "./schemas.js";
 
 import { CURRENT_VERSION } from "../../utils/version.js";
@@ -214,4 +215,205 @@ export async function getAutoUpdateConfig(_input: AutoUpdateConfigInput) {
     postUpdateMessage:
       "✅ Config updated! Please restart your editor completely (quit and reopen) to use the latest version.",
   };
+}
+
+/**
+ * Get detailed, platform-specific update instructions
+ */
+export async function getUpdateInstructions(
+  input: GetUpdateInstructionsInput
+): Promise<object> {
+  const platform =
+    input.platform === "auto" ? detectPlatform() : input.platform;
+  const editor = input.editor === "auto" ? "claude-desktop" : input.editor;
+
+  const configPaths = getConfigPaths(platform, editor);
+  const restartCommand = getRestartCommand(platform, editor);
+
+  return {
+    title: "🔄 How to Update Midnight MCP",
+    currentSetup: {
+      detectedPlatform: platform,
+      targetEditor: editor,
+    },
+    steps: [
+      {
+        step: 1,
+        title: "Clear npm cache",
+        command: "rm -rf ~/.npm/_npx",
+        explanation:
+          "This removes cached npx packages so the latest version will be downloaded",
+        required: true,
+      },
+      {
+        step: 2,
+        title: "Restart your editor completely",
+        action: restartCommand,
+        explanation:
+          "A full restart is needed - just reloading the window is not enough",
+        required: true,
+      },
+      {
+        step: 3,
+        title: "If still outdated, update config file",
+        configPath: configPaths.primary,
+        alternativePaths: configPaths.alternatives,
+        change: {
+          find: '"midnight-mcp"',
+          replaceWith: '"midnight-mcp@latest"',
+          location: 'In the "args" array for the midnight server',
+        },
+        explanation: "Adding @latest ensures you always get the newest version",
+        required: false,
+      },
+    ],
+    troubleshooting: [
+      {
+        issue: "Still seeing old version after restart",
+        solutions: [
+          "Make sure you quit the editor completely (Cmd+Q on Mac, Alt+F4 on Windows)",
+          "Check if multiple editor instances are running",
+          "Try: rm -rf ~/.npm/_npx && rm -rf ~/.cache/midnight-mcp",
+        ],
+      },
+      {
+        issue: "Config file not found",
+        solutions: [
+          `Primary location: ${configPaths.primary}`,
+          `Create it if it doesn't exist`,
+          "See docs: https://github.com/MCP-Mirror/QuantGeekDev_midnight-mcp",
+        ],
+      },
+      {
+        issue: "Permission denied errors",
+        solutions: [
+          "On macOS/Linux: Check file permissions with ls -la",
+          "On Windows: Run editor as administrator",
+        ],
+      },
+    ],
+    exampleConfig: generateExampleConfig(editor),
+    helpfulLinks: {
+      documentation:
+        "https://github.com/MCP-Mirror/QuantGeekDev_midnight-mcp#readme",
+      issues: "https://github.com/MCP-Mirror/QuantGeekDev_midnight-mcp/issues",
+    },
+  };
+}
+
+function detectPlatform(): "mac" | "windows" | "linux" {
+  const p = process.platform;
+  if (p === "darwin") return "mac";
+  if (p === "win32") return "windows";
+  return "linux";
+}
+
+function getConfigPaths(
+  platform: string,
+  editor: string
+): { primary: string; alternatives: string[] } {
+  const home = process.env.HOME || process.env.USERPROFILE || "~";
+
+  const paths: Record<
+    string,
+    Record<string, { primary: string; alternatives: string[] }>
+  > = {
+    mac: {
+      "claude-desktop": {
+        primary: `${home}/Library/Application Support/Claude/claude_desktop_config.json`,
+        alternatives: [],
+      },
+      cursor: {
+        primary: `${home}/.cursor/mcp.json`,
+        alternatives: [`${home}/Library/Application Support/Cursor/mcp.json`],
+      },
+      vscode: {
+        primary: `${home}/.vscode/mcp.json`,
+        alternatives: [
+          `${home}/Library/Application Support/Code/User/settings.json`,
+        ],
+      },
+      windsurf: {
+        primary: `${home}/.codeium/windsurf/mcp_config.json`,
+        alternatives: [],
+      },
+    },
+    windows: {
+      "claude-desktop": {
+        primary: `%APPDATA%\\Claude\\claude_desktop_config.json`,
+        alternatives: [],
+      },
+      cursor: {
+        primary: `%USERPROFILE%\\.cursor\\mcp.json`,
+        alternatives: [`%APPDATA%\\Cursor\\mcp.json`],
+      },
+      vscode: {
+        primary: `%USERPROFILE%\\.vscode\\mcp.json`,
+        alternatives: [`%APPDATA%\\Code\\User\\settings.json`],
+      },
+      windsurf: {
+        primary: `%USERPROFILE%\\.codeium\\windsurf\\mcp_config.json`,
+        alternatives: [],
+      },
+    },
+    linux: {
+      "claude-desktop": {
+        primary: `${home}/.config/Claude/claude_desktop_config.json`,
+        alternatives: [],
+      },
+      cursor: {
+        primary: `${home}/.cursor/mcp.json`,
+        alternatives: [`${home}/.config/Cursor/mcp.json`],
+      },
+      vscode: {
+        primary: `${home}/.vscode/mcp.json`,
+        alternatives: [`${home}/.config/Code/User/settings.json`],
+      },
+      windsurf: {
+        primary: `${home}/.codeium/windsurf/mcp_config.json`,
+        alternatives: [],
+      },
+    },
+  };
+
+  return paths[platform]?.[editor] || paths.mac["claude-desktop"];
+}
+
+function getRestartCommand(platform: string, editor: string): string {
+  const editorNames: Record<string, string> = {
+    "claude-desktop": "Claude Desktop",
+    cursor: "Cursor",
+    vscode: "VS Code",
+    windsurf: "Windsurf",
+  };
+
+  const name = editorNames[editor] || editor;
+
+  if (platform === "mac") {
+    return `Quit ${name} completely (Cmd+Q), then reopen`;
+  } else if (platform === "windows") {
+    return `Close ${name} completely (Alt+F4 or File > Exit), then reopen`;
+  } else {
+    return `Close ${name} completely, then reopen`;
+  }
+}
+
+function generateExampleConfig(editor: string): object {
+  const baseConfig = {
+    mcpServers: {
+      midnight: {
+        command: "npx",
+        args: ["-y", "midnight-mcp@latest"],
+      },
+    },
+  };
+
+  if (editor === "vscode") {
+    return {
+      note: "For VS Code, add to settings.json or mcp.json",
+      config: baseConfig,
+    };
+  }
+
+  return baseConfig;
 }
