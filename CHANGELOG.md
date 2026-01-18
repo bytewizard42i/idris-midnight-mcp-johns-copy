@@ -7,6 +7,73 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.13] - 2026-01-18
+
+### Added
+
+- **Update Instructions Tool** - New `midnight-get-update-instructions` tool for platform-specific update guidance
+  - Auto mode returns instructions for ALL supported editors (Claude Desktop, Cursor, VS Code, Windsurf)
+  - Platform detection (macOS/Windows/Linux) with editor-specific config paths
+  - Step-by-step instructions with troubleshooting section
+  - Example config formats for each editor
+
+- **Periodic Version Checks** - Automatic version checking every 10 tool calls
+  - Re-checks for updates if >5 minutes since last check
+  - Shows update notification in tool responses when outdated
+  - Improved update messages with actionable quickFix steps
+
+- **Undocumented Features Section** - New documentation section covering features not in official Midnight docs
+  - Tuple destructuring status
+  - Constant folding in indices
+  - Bytes ↔ Vector casting
+  - Division and modulo operators
+
+### Fixed
+
+- **Type Casting Documentation** - Fixed to match official Midnight type cast table
+  - Boolean → Field is NOT allowed (must go through Uint)
+  - Field ↔ Bytes can fail at runtime (conversion type)
+  - Added all three cast kinds: static (always succeeds), conversion (semantic change), checked (can fail)
+
+- **Compiler Package Hallucination** - Prevented LLM from suggesting fake npm packages
+  - Added explicit instructions about `compact compile` command
+  - Clarified compiler comes with Midnight toolchain, NOT npm
+  - Updated all prompts to prevent suggesting `@midnight-ntwrk/compact-cli`
+
+- **Division Operator Handling** - Changed from error to warning
+  - Division `/` and modulo `%` simply not mentioned in docs (not explicitly unsupported)
+  - Added workaround hint: use witness for off-chain computation
+
+- **Map.lookup() Behavior** - Added caveat about return type
+  - Docs show `value_type` not `Maybe<value_type>`
+  - Recommendation: check `member()` before `lookup()` for safety
+
+- **Windows Support** - Platform-specific commands in update instructions
+  - Unix: `rm -rf ~/.npm/_npx`
+  - Windows: PowerShell `Remove-Item` with cmd.exe alternative
+  - Platform-aware troubleshooting steps
+
+- **Repository URLs** - Fixed all URLs to point to `Olanetsoft/midnight-mcp` (not mirror)
+
+### Improved
+
+- **Bytes/Opaque Types Documentation** - Added detailed caveats and source annotations
+  - Fixed invalid `Opaque<"address">` to `Bytes<32>`
+  - Clarified only two tags allowed: `"string"` and `"Uint8Array"`
+  - Added notes about on-chain storage (not encrypted)
+
+- **Maybe/Either Examples** - Added comprehensive usage examples
+  - `some()`, `none()`, `left()`, `right()` constructor examples
+  - Common patterns: `find_user`, `burnAddress()`
+  - Clarified descriptions (has/hasn't, one or other)
+
+- **Style vs Requirements** - Separated syntax requirements from style conventions
+  - Requirements: Must follow or code won't compile
+  - Conventions: Style guides that don't affect compilation
+  - Updated LLM prompts to distinguish between the two
+
+- **Uint/Division Documentation** - Added source annotations clarifying what's documented vs inferred
+
 ## [0.2.12] - 2026-01-16
 
 ### Fixed
