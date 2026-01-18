@@ -218,6 +218,26 @@ export async function getAutoUpdateConfig(_input: AutoUpdateConfigInput) {
 }
 
 /**
+ * Supported editors list
+ */
+const SUPPORTED_EDITORS = [
+  "claude-desktop",
+  "cursor",
+  "vscode",
+  "windsurf",
+] as const;
+
+/**
+ * Get platform-specific npm cache clear command
+ */
+function getNpmCacheClearCommand(platform: string): string {
+  if (platform === "windows") {
+    return 'Remove-Item -Recurse -Force "$env:USERPROFILE\\.npm\\_npx" -ErrorAction SilentlyContinue';
+  }
+  return "rm -rf ~/.npm/_npx";
+}
+
+/**
  * Get detailed, platform-specific update instructions
  */
 export async function getUpdateInstructions(
@@ -225,10 +245,17 @@ export async function getUpdateInstructions(
 ): Promise<object> {
   const platform =
     input.platform === "auto" ? detectPlatform() : input.platform;
-  const editor = input.editor === "auto" ? "claude-desktop" : input.editor;
 
+  // If editor is "auto", return instructions for ALL supported editors
+  if (input.editor === "auto") {
+    return getMultiEditorInstructions(platform);
+  }
+
+  // Single editor mode
+  const editor = input.editor;
   const configPaths = getConfigPaths(platform, editor);
   const restartCommand = getRestartCommand(platform, editor);
+  const cacheCommand = getNpmCacheClearCommand(platform);
 
   return {
     title: "🔄 How to Update Midnight MCP",
@@ -240,7 +267,11 @@ export async function getUpdateInstructions(
       {
         step: 1,
         title: "Clear npm cache",
-        command: "rm -rf ~/.npm/_npx",
+        command: cacheCommand,
+        windowsNote:
+          platform === "windows"
+            ? "Run in PowerShell. For cmd.exe use: rd /s /q %USERPROFILE%\\.npm\\_npx"
+            : undefined,
         explanation:
           "This removes cached npx packages so the latest version will be downloaded",
         required: true,
@@ -267,38 +298,161 @@ export async function getUpdateInstructions(
         required: false,
       },
     ],
+    troubleshooting: getTroubleshootingSection(platform, configPaths),
+    exampleConfig: generateExampleConfig(editor),
+    helpfulLinks: {
+      documentation: "https://github.com/Olanetsoft/midnight-mcp#readme",
+      issues: "https://github.com/Olanetsoft/midnight-mcp/issues",
+    },
+  };
+}
+
+/**
+ * Get instructions for all supported editors
+ */
+function getMultiEditorInstructions(platform: string): object {
+  const cacheCommand = getNpmCacheClearCommand(platform);
+
+  const editorConfigs = SUPPORTED_EDITORS.map((editor) => {
+    const paths = getConfigPaths(platform, editor);
+    const restart = getRestartCommand(platform, editor);
+    return {
+      editor,
+      displayName: getEditorDisplayName(editor),
+      configPath: paths.primary,
+      alternativePaths: paths.alternatives,
+      restartCommand: restart,
+    };
+  });
+
+  return {
+    title: "🔄 How to Update Midnight MCP",
+    currentSetup: {
+      detectedPlatform: platform,
+      targetEditor: "all (auto mode)",
+    },
+    commonSteps: [
+      {
+        step: 1,
+        title: "Clear npm cache",
+        command: cacheCommand,
+        windowsNote:
+          platform === "windows"
+            ? "Run in PowerShell. For cmd.exe use: rd /s /q %USERPROFILE%\\.npm\\_npx"
+            : undefined,
+        explanation:
+          "This removes cached npx packages so the latest version will be downloaded",
+        required: true,
+      },
+      {
+        step: 2,
+        title: "Restart your editor completely",
+        explanation:
+          "A full restart is needed - just reloading the window is not enough",
+        required: true,
+      },
+    ],
+    editorSpecificPaths: editorConfigs,
+    configChange: {
+      find: '"midnight-mcp"',
+      replaceWith: '"midnight-mcp@latest"',
+      location: 'In the "args" array for the midnight server',
+    },
     troubleshooting: [
       {
         issue: "Still seeing old version after restart",
         solutions: [
-          "Make sure you quit the editor completely (Cmd+Q on Mac, Alt+F4 on Windows)",
+          platform === "mac"
+            ? "Make sure you quit the editor completely (Cmd+Q)"
+            : platform === "windows"
+              ? "Make sure you quit the editor completely (Alt+F4)"
+              : "Make sure you quit the editor completely",
           "Check if multiple editor instances are running",
-          "Try: rm -rf ~/.npm/_npx && rm -rf ~/.cache/midnight-mcp",
+          platform === "windows"
+            ? 'Try: Remove-Item -Recurse -Force "$env:USERPROFILE\\.npm\\_npx", "$env:LOCALAPPDATA\\midnight-mcp"'
+            : "Try: rm -rf ~/.npm/_npx && rm -rf ~/.cache/midnight-mcp",
         ],
       },
       {
         issue: "Config file not found",
         solutions: [
-          `Primary location: ${configPaths.primary}`,
-          `Create it if it doesn't exist`,
-          "See docs: https://github.com/MCP-Mirror/QuantGeekDev_midnight-mcp",
-        ],
-      },
-      {
-        issue: "Permission denied errors",
-        solutions: [
-          "On macOS/Linux: Check file permissions with ls -la",
-          "On Windows: Run editor as administrator",
+          "Check the editor-specific paths listed above",
+          "Create the config file if it doesn't exist",
+          "See docs: https://github.com/Olanetsoft/midnight-mcp",
         ],
       },
     ],
-    exampleConfig: generateExampleConfig(editor),
+    exampleConfig: {
+      mcpServers: {
+        midnight: {
+          command: "npx",
+          args: ["-y", "midnight-mcp@latest"],
+        },
+      },
+    },
     helpfulLinks: {
-      documentation:
-        "https://github.com/MCP-Mirror/QuantGeekDev_midnight-mcp#readme",
-      issues: "https://github.com/MCP-Mirror/QuantGeekDev_midnight-mcp/issues",
+      documentation: "https://github.com/Olanetsoft/midnight-mcp#readme",
+      issues: "https://github.com/Olanetsoft/midnight-mcp/issues",
     },
   };
+}
+
+function getEditorDisplayName(editor: string): string {
+  const names: Record<string, string> = {
+    "claude-desktop": "Claude Desktop",
+    cursor: "Cursor",
+    vscode: "VS Code",
+    windsurf: "Windsurf",
+  };
+  return names[editor] || editor;
+}
+
+function getTroubleshootingSection(
+  platform: string,
+  configPaths: { primary: string; alternatives: string[] }
+): object[] {
+  const quitCommand =
+    platform === "mac"
+      ? "Cmd+Q"
+      : platform === "windows"
+        ? "Alt+F4"
+        : "close completely";
+  const cacheCleanup =
+    platform === "windows"
+      ? 'Remove-Item -Recurse -Force "$env:USERPROFILE\\.npm\\_npx", "$env:LOCALAPPDATA\\midnight-mcp"'
+      : "rm -rf ~/.npm/_npx && rm -rf ~/.cache/midnight-mcp";
+
+  return [
+    {
+      issue: "Still seeing old version after restart",
+      solutions: [
+        `Make sure you quit the editor completely (${quitCommand})`,
+        "Check if multiple editor instances are running",
+        `Try: ${cacheCleanup}`,
+      ],
+    },
+    {
+      issue: "Config file not found",
+      solutions: [
+        `Primary location: ${configPaths.primary}`,
+        "Create it if it doesn't exist",
+        "See docs: https://github.com/Olanetsoft/midnight-mcp",
+      ],
+    },
+    {
+      issue: "Permission denied errors",
+      solutions:
+        platform === "windows"
+          ? [
+              "Run editor as administrator",
+              "Check file permissions in Windows Security settings",
+            ]
+          : [
+              "Check file permissions with ls -la",
+              "Ensure your user owns the config file",
+            ],
+    },
+  ];
 }
 
 function detectPlatform(): "mac" | "windows" | "linux" {
