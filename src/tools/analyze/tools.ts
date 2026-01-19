@@ -7,7 +7,11 @@ import type {
   ExtendedToolDefinition,
   OutputSchema,
 } from "../../types/index.js";
-import { analyzeContract, explainCircuit } from "./handlers.js";
+import {
+  analyzeContract,
+  explainCircuit,
+  compileContract,
+} from "./handlers.js";
 
 // ============================================================================
 // Output Schemas
@@ -157,6 +161,81 @@ const explainCircuitOutputSchema: OutputSchema = {
   description: "Detailed circuit explanation with privacy analysis",
 };
 
+const compileContractOutputSchema: OutputSchema = {
+  type: "object",
+  properties: {
+    success: {
+      type: "boolean",
+      description: "Whether compilation succeeded",
+    },
+    message: {
+      type: "string",
+      description: "Human-readable status message",
+    },
+    compilerVersion: {
+      type: "string",
+      description: "Version of the Compact compiler used",
+    },
+    compilationMode: {
+      type: "string",
+      enum: ["syntax-only", "full"],
+      description: "Type of compilation performed",
+    },
+    output: {
+      type: "object",
+      properties: {
+        circuits: {
+          type: "array",
+          items: { type: "string" },
+          description: "List of compiled circuits",
+        },
+        ledgerFields: {
+          type: "array",
+          items: { type: "string" },
+          description: "List of ledger fields",
+        },
+        exports: {
+          type: "array",
+          items: { type: "string" },
+          description: "List of exported symbols",
+        },
+      },
+    },
+    warnings: {
+      type: "array",
+      items: { type: "string" },
+      description: "Compiler warnings",
+    },
+    error: {
+      type: "string",
+      description: "Error code if compilation failed",
+    },
+    location: {
+      type: "object",
+      properties: {
+        line: { type: "number" },
+        column: { type: "number" },
+        errorType: { type: "string" },
+      },
+      description: "Location of error if applicable",
+    },
+    hint: {
+      type: "string",
+      description: "Helpful hint for resolving the issue",
+    },
+    serviceUrl: {
+      type: "string",
+      description: "URL of the compiler service used",
+    },
+    serviceAvailable: {
+      type: "boolean",
+      description: "Whether the compiler service is available",
+    },
+  },
+  required: ["success", "message"],
+  description: "Compilation result with detailed output or error information",
+};
+
 // ============================================================================
 // Tool Definitions
 // ============================================================================
@@ -224,5 +303,55 @@ USAGE GUIDANCE:
       category: "analyze",
     },
     handler: explainCircuit,
+  },
+  {
+    name: "midnight-compile-contract",
+    description: `🔧 REAL COMPILATION - Compile Compact code using the hosted compiler service.
+
+Unlike static analysis tools, this ACTUALLY COMPILES the contract and returns real compiler errors.
+
+Use this to:
+• Validate that generated code compiles before showing to users
+• Get actual compiler error messages with line numbers
+• Check if a contract is syntactically and semantically correct
+
+Options:
+• skipZk=true (default): Fast syntax validation only (~1-2s)
+• fullCompile=true: Full compilation with ZK circuit generation (~10-30s)
+
+USAGE GUIDANCE:
+• Call after generating or modifying Compact code
+• Use skipZk=true for quick validation during development
+• Use fullCompile=true for final validation before deployment
+• If service unavailable, fall back to midnight-extract-contract-structure`,
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        code: {
+          type: "string",
+          description: "Compact contract source code to compile",
+        },
+        skipZk: {
+          type: "boolean",
+          description:
+            "Skip ZK circuit generation for faster syntax-only validation (default: true)",
+        },
+        fullCompile: {
+          type: "boolean",
+          description:
+            "Perform full compilation including ZK generation (slower but complete)",
+        },
+      },
+      required: ["code"],
+    },
+    outputSchema: compileContractOutputSchema,
+    annotations: {
+      readOnlyHint: true,
+      idempotentHint: true,
+      openWorldHint: true, // Makes network requests
+      title: "🔧 Compile Contract",
+      category: "analyze",
+    },
+    handler: compileContract,
   },
 ];
