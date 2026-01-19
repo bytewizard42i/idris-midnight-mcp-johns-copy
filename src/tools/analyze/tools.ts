@@ -166,19 +166,25 @@ const compileContractOutputSchema: OutputSchema = {
   properties: {
     success: {
       type: "boolean",
-      description: "Whether compilation succeeded",
+      description: "Whether compilation/validation succeeded",
     },
     message: {
       type: "string",
       description: "Human-readable status message",
     },
+    validationType: {
+      type: "string",
+      enum: ["compiler", "static-analysis-fallback"],
+      description:
+        "Type of validation performed - compiler (real) or static-analysis-fallback (when service unavailable)",
+    },
     compilerVersion: {
       type: "string",
-      description: "Version of the Compact compiler used",
+      description: "Version of the Compact compiler used (if available)",
     },
     compilationMode: {
       type: "string",
-      enum: ["syntax-only", "full"],
+      enum: ["syntax-only", "full", "none"],
       description: "Type of compilation performed",
     },
     output: {
@@ -204,7 +210,7 @@ const compileContractOutputSchema: OutputSchema = {
     warnings: {
       type: "array",
       items: { type: "string" },
-      description: "Compiler warnings",
+      description: "Compiler warnings or fallback warnings",
     },
     error: {
       type: "string",
@@ -231,9 +237,24 @@ const compileContractOutputSchema: OutputSchema = {
       type: "boolean",
       description: "Whether the compiler service is available",
     },
+    fallbackReason: {
+      type: "string",
+      description: "Reason for falling back to static analysis (if applicable)",
+    },
+    staticAnalysis: {
+      type: "object",
+      description: "Static analysis results (only present when using fallback)",
+      properties: {
+        summary: { type: "object" },
+        structure: { type: "object" },
+        securityFindings: { type: "array" },
+        recommendations: { type: "array" },
+      },
+    },
   },
-  required: ["success", "message"],
-  description: "Compilation result with detailed output or error information",
+  required: ["success", "message", "validationType"],
+  description:
+    "Compilation result with detailed output, or static analysis fallback if service unavailable",
 };
 
 // ============================================================================
@@ -319,11 +340,15 @@ Options:
 • skipZk=true (default): Fast syntax validation only (~1-2s)
 • fullCompile=true: Full compilation with ZK circuit generation (~10-30s)
 
+FALLBACK BEHAVIOR:
+• If the compiler service is unavailable, automatically falls back to static analysis
+• Check 'validationType' in response: 'compiler' = real compilation, 'static-analysis-fallback' = fallback mode
+• Fallback provides structure/security analysis but may miss semantic errors
+
 USAGE GUIDANCE:
 • Call after generating or modifying Compact code
 • Use skipZk=true for quick validation during development
-• Use fullCompile=true for final validation before deployment
-• If service unavailable, fall back to midnight-extract-contract-structure`,
+• Use fullCompile=true for final validation before deployment`,
     inputSchema: {
       type: "object" as const,
       properties: {

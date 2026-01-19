@@ -1,5 +1,18 @@
-import { describe, it, expect, vi, beforeAll, afterAll, beforeEach } from "vitest";
-import { analyzeContract, explainCircuit, compileContract, getCompilerStatus } from "../src/tools/analyze/index.js";
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeAll,
+  afterAll,
+  beforeEach,
+} from "vitest";
+import {
+  analyzeContract,
+  explainCircuit,
+  compileContract,
+  getCompilerStatus,
+} from "../src/tools/analyze/index.js";
 
 describe("Contract Analyzer", () => {
   it("should analyze a simple counter contract", async () => {
@@ -64,7 +77,7 @@ export circuit increment(amount: Field): Void {
     const result = await analyzeContract({ code, checkSecurity: true });
 
     const unusedWitnessFindings = result.securityFindings.filter((f) =>
-      f.message.includes("not used")
+      f.message.includes("not used"),
     );
     expect(unusedWitnessFindings.length).toBeGreaterThan(0);
   });
@@ -83,7 +96,7 @@ export circuit revealData(data: Field): Field {
     expect(result.circuitName).toBe("revealData");
     expect(result.isPublic).toBe(true);
     expect(result.operations).toContain(
-      "Reveals private data selectively (disclose)"
+      "Reveals private data selectively (disclose)",
     );
     expect(result.zkImplications.length).toBeGreaterThan(0);
   });
@@ -198,32 +211,93 @@ export circuit increment(): Void {
     });
   });
 
-  it("should handle API errors gracefully", async () => {
+  it("should return validationType compiler on success", async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        output: "Compilation successful",
+        compilerVersion: "0.18.0",
+        compiledAt: "2026-01-19T19:17:56.064Z",
+        executionTime: 2841,
+      }),
+    });
+
+    const result = (await compileContract({
+      code: `
+pragma language_version >= 0.18.0;
+
+ledger {
+  counter: Counter;
+}
+
+export circuit increment(): Void {
+  ledger.counter.increment(1);
+}
+      `,
+    })) as Record<string, unknown>;
+
+    expect(result.success).toBe(true);
+    expect(result.validationType).toBe("compiler");
+    expect(result.message).toContain("Compilation successful");
+    expect(result.compilerVersion).toBe("0.18.0");
+  });
+
+  it("should fall back to static analysis on network failures", async () => {
+    mockFetch.mockRejectedValueOnce(new Error("Network error"));
+
+    const validCode = `
+pragma language_version >= 0.18.0;
+
+ledger {
+  counter: Counter;
+}
+
+export circuit increment(): Void {
+  ledger.counter.increment(1);
+}
+    `;
+
+    const result = (await compileContract({
+      code: validCode,
+    })) as Record<string, unknown>;
+
+    // Should succeed with fallback, not fail
+    expect(result.success).toBe(true);
+    expect(result.validationType).toBe("static-analysis-fallback");
+    expect(result.serviceAvailable).toBe(false);
+    expect(result.message).toContain("static analysis fallback");
+    expect(result.staticAnalysis).toBeDefined();
+    expect((result.warnings as string[]).length).toBeGreaterThan(0);
+    expect((result.warnings as string[])[0]).toContain("STATIC ANALYSIS ONLY");
+  });
+
+  it("should fall back to static analysis on API 500 errors", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: false,
       status: 500,
       text: async () => "Internal Server Error",
     });
 
-    const result = (await compileContract({
-      code: "test",
-    })) as Record<string, unknown>;
+    const validCode = `
+ledger {
+  value: Field;
+}
 
-    expect(result.success).toBe(false);
-    expect(result.error).toBe("API_ERROR");
-    expect(result.serviceAvailable).toBe(false);
-  });
-
-  it("should handle network failures", async () => {
-    mockFetch.mockRejectedValueOnce(new Error("Network error"));
+export circuit getValue(): Field {
+  return ledger.value;
+}
+    `;
 
     const result = (await compileContract({
-      code: "test",
+      code: validCode,
     })) as Record<string, unknown>;
 
-    expect(result.success).toBe(false);
-    expect(result.error).toBe("CONNECTION_FAILED");
+    // Should succeed with fallback
+    expect(result.success).toBe(true);
+    expect(result.validationType).toBe("static-analysis-fallback");
     expect(result.serviceAvailable).toBe(false);
+    expect(result.staticAnalysis).toBeDefined();
   });
 
   it("should validate input - reject empty code", async () => {

@@ -312,6 +312,7 @@ function getPrivacyConsiderations(circuit: CodeUnit): string[] {
 }
 /**
  * Compile a Compact smart contract using the hosted compiler service
+ * Falls back to static analysis if the compiler service is unavailable
  */
 export async function compileContract(
   input: CompileContractInput,
@@ -337,6 +338,7 @@ export async function compileContract(
       message: result.message,
       compilerVersion: result.compilerVersion,
       compilationMode: skipZk ? "syntax-only" : "full",
+      validationType: "compiler",
       output: {
         circuits: result.circuits || [],
         ledgerFields: result.ledgerFields || [],
@@ -346,11 +348,51 @@ export async function compileContract(
       serviceUrl: getCompilerUrl(),
     };
   } else {
-    // Parse error details if available
+    // Check if service is unavailable - fall back to static analysis
+    if (!result.serviceAvailable) {
+      logger.warn(
+        "Compiler service unavailable, falling back to static analysis",
+        { error: result.error },
+      );
+
+      // Run static analysis as fallback
+      const staticResult = await analyzeContract({
+        code: input.code,
+        checkSecurity: true,
+      });
+
+      return {
+        success: true, // Static analysis succeeded
+        message:
+          "⚠️ Compiler service unavailable - used static analysis fallback",
+        validationType: "static-analysis-fallback",
+        compilationMode: "none",
+        serviceAvailable: false,
+        serviceUrl: getCompilerUrl(),
+        fallbackReason: result.message,
+        warnings: [
+          "⚠️ STATIC ANALYSIS ONLY: The hosted compiler is unavailable.",
+          "This validation catches syntax patterns but may miss semantic errors.",
+          "For full validation, try again when the compiler service is back online.",
+          ...(staticResult.securityFindings || []).map(
+            (f: SecurityFinding) => `[${f.severity}] ${f.message}`,
+          ),
+        ],
+        staticAnalysis: {
+          summary: staticResult.summary,
+          structure: staticResult.structure,
+          securityFindings: staticResult.securityFindings,
+          recommendations: staticResult.recommendations,
+        },
+      };
+    }
+
+    // Compiler available but compilation failed - return error details
     const errorInfo: Record<string, unknown> = {
       success: false,
       message: result.message,
       error: result.error,
+      validationType: "compiler",
       serviceAvailable: result.serviceAvailable,
       serviceUrl: getCompilerUrl(),
     };
@@ -364,10 +406,7 @@ export async function compileContract(
     }
 
     // Add helpful hints based on error type
-    if (result.error === "CONNECTION_FAILED") {
-      errorInfo.hint =
-        "The compiler service may be temporarily unavailable. Try again in a moment.";
-    } else if (result.error === "TIMEOUT") {
+    if (result.error === "TIMEOUT") {
       errorInfo.hint =
         "The contract may be too complex. Try simplifying or breaking it into smaller pieces.";
     } else if (result.errorDetails?.line) {
