@@ -117,7 +117,7 @@ export async function checkCompilerHealth(): Promise<{
     clearTimeout(timeoutId);
 
     if (response.ok) {
-      const data = await response.json();
+      const data = (await response.json()) as { compilerVersion?: string; version?: string };
       return {
         available: true,
         version: data.compilerVersion || data.version,
@@ -211,7 +211,7 @@ export async function compileContract(
       };
     }
 
-    const result: CompileResponse = await response.json();
+    const result = (await response.json()) as CompileResponse;
 
     if (result.success) {
       // Handle both detailed output object and simple string output
