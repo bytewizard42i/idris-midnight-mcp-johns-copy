@@ -105,19 +105,20 @@ export async function checkCompilerHealth(): Promise<{
   version?: string;
   error?: string;
 }> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
 
+  try {
     const response = await fetch(`${COMPILER_API_URL}/health`, {
       method: "GET",
       signal: controller.signal,
     });
 
-    clearTimeout(timeoutId);
-
     if (response.ok) {
-      const data = (await response.json()) as { compilerVersion?: string; version?: string };
+      const data = (await response.json()) as {
+        compilerVersion?: string;
+        version?: string;
+      };
       return {
         available: true,
         version: data.compilerVersion || data.version,
@@ -138,6 +139,8 @@ export async function checkCompilerHealth(): Promise<{
       available: false,
       error: errorMessage,
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 
@@ -167,10 +170,10 @@ export async function compileContract(
     };
   }
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), COMPILER_TIMEOUT);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), COMPILER_TIMEOUT);
 
+  try {
     const requestBody: CompileRequest = {
       code,
       options: {
@@ -192,8 +195,6 @@ export async function compileContract(
       body: JSON.stringify(requestBody),
       signal: controller.signal,
     });
-
-    clearTimeout(timeoutId);
 
     if (!response.ok) {
       // Server error (5xx) or client error (4xx)
@@ -301,6 +302,8 @@ export async function compileContract(
       error: "CONNECTION_FAILED",
       serviceAvailable: false,
     };
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

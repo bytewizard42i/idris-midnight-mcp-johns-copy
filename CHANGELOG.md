@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.15] - 2026-01-21
+
+### Fixed
+
+- **Timer Cleanup** - Fixed potential memory leak in compiler service where timeouts weren't cleared on error paths
+  - `checkCompilerHealth`: Timer now cleaned up in `finally` block
+  - `compileContract`: Timer now cleaned up in `finally` block
+  - Prevents event loop from staying alive unnecessarily after failures
+
+- **Input Validation** - Guard against undefined `input.code` in compile handler logging
+  - Uses optional chaining: `input.code?.length ?? 0`
+
+### Changed
+
+- **Schema Documentation** - Clarified `skipZk`/`fullCompile` precedence in `CompileContractInputSchema`
+  - `fullCompile: true` overrides `skipZk` (forces full compilation)
+  - Added explicit documentation in field descriptions
+
 ## [0.2.14] - 2026-01-20
 
 ### Added

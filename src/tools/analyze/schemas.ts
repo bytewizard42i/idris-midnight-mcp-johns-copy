@@ -26,14 +26,14 @@ export const CompileContractInputSchema = z.object({
     .optional()
     .default(true)
     .describe(
-      "Skip ZK circuit generation for faster syntax-only validation (default: true)",
+      "Skip ZK circuit generation for faster syntax-only validation (default: true). Note: overridden by fullCompile if set to true.",
     ),
   fullCompile: z
     .boolean()
     .optional()
     .default(false)
     .describe(
-      "Perform full compilation including ZK generation (slower but complete)",
+      "Perform full compilation including ZK generation (slower but complete). When true, overrides skipZk to false.",
     ),
 });
 

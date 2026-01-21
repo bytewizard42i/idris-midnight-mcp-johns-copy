@@ -318,7 +318,7 @@ export async function compileContract(
   input: CompileContractInput,
 ): Promise<object> {
   logger.info("Compiling Compact contract via hosted service", {
-    codeLength: input.code.length,
+    codeLength: input.code?.length ?? 0,
     skipZk: input.skipZk,
     fullCompile: input.fullCompile,
   });
