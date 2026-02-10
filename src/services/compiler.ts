@@ -4,7 +4,7 @@
  * Integrates with the hosted Compact compiler API to provide
  * real-time contract compilation and validation.
  *
- * API: https://compact-playground.onrender.com
+ * API: https://compact-playground.up.railway.app
  */
 
 import { logger } from "../utils/logger.js";
@@ -14,7 +14,8 @@ import { logger } from "../utils/logger.js";
 // =============================================================================
 
 const COMPILER_API_URL =
-  process.env.COMPACT_COMPILER_URL || "https://compact-playground.onrender.com";
+  process.env.COMPACT_COMPILER_URL ||
+  "https://compact-playground.up.railway.app";
 
 const COMPILER_TIMEOUT = 30000; // 30 seconds
 const MAX_CODE_SIZE = 100 * 1024; // 100 KB

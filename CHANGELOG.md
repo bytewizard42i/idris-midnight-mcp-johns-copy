@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Hosted Compiler Integration** - New `midnight-compile-contract` tool for real contract validation
-  - Connects to hosted Compact compiler at `compact-playground.onrender.com`
+  - Connects to hosted Compact compiler at `compact-playground.up.railway.app`
   - Fast mode (`skipZk=true`): Syntax validation in ~1-2 seconds
   - Full mode (`fullCompile=true`): Complete ZK circuit generation in ~10-30 seconds
   - Returns actual compiler errors with line/column locations
