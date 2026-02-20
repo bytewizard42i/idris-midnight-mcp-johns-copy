@@ -126,9 +126,6 @@ export const REPO_ALIASES: Record<string, { owner: string; repo: string }> = {
   stablecoin: { owner: "statera-protocol", repo: "statera-protocol-midnight" },
   "midnight-bank": { owner: "nel349", repo: "midnight-bank" },
   bank: { owner: "nel349", repo: "midnight-bank" },
-  zkbadge: { owner: "Imdavyking", repo: "zkbadge" },
-  badge: { owner: "Imdavyking", repo: "zkbadge" },
-  davyking: { owner: "Imdavyking", repo: "zkbadge" },
 };
 
 // Example definitions
@@ -270,22 +267,6 @@ export const EXAMPLES: ExampleDefinition[] = [
       "Multi-party auth",
       "Selective disclosure",
       "Private transfers",
-    ],
-  },
-  {
-    name: "zkBadge (Davyking)",
-    repository: "Imdavyking/zkbadge",
-    description:
-      "3rd place Mini DApp winner. Privacy-preserving identity and access control. Issue verifiable credentials (e.g., age proof) without revealing personal data. Only 'verified' status stored on-chain.",
-    category: "identity",
-    complexity: "intermediate",
-    mainFile: "contract/src/zkbadge.compact",
-    features: [
-      "ZK credentials",
-      "Off-chain verification",
-      "On-chain badges",
-      "Access control",
-      "Reputation system",
     ],
   },
   // Core Partner - PaimaStudios (Gaming Infrastructure)

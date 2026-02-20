@@ -114,7 +114,6 @@ export const REPOSITORIES: RepoConfig[] = [
   { owner: "midnightntwrk", repo: "midnight-node", branch: "main" },
   { owner: "midnightntwrk", repo: "midnight-node-cli", branch: "main" },
   { owner: "midnightntwrk", repo: "midnight-node-docker", branch: "main" },
-  { owner: "midnightntwrk", repo: "midnight-node-ops", branch: "main" },
   { owner: "midnightntwrk", repo: "midnight-indexer", branch: "main" },
   { owner: "midnightntwrk", repo: "midnight-ledger", branch: "main" },
   {
@@ -290,7 +289,6 @@ export const REPOSITORIES: RepoConfig[] = [
     branch: "main",
   },
   { owner: "nel349", repo: "midnight-bank", branch: "main" },
-  { owner: "Imdavyking", repo: "zkbadge", branch: "main" },
 
   // Core Partner - PaimaStudios (Gaming Infrastructure)
   { owner: "PaimaStudios", repo: "midnight-game-2", branch: "main" },

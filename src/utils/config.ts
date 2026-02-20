@@ -295,13 +295,6 @@ export const DEFAULT_REPOSITORIES: RepositoryConfig[] = [
     patterns: ["**/*.compact", "**/*.ts", "**/*.md"],
     exclude: ["node_modules/**", "dist/**"],
   },
-  {
-    owner: "Imdavyking",
-    repo: "zkbadge",
-    branch: "main",
-    patterns: ["**/*.compact", "**/*.ts", "**/*.md"],
-    exclude: ["node_modules/**", "dist/**"],
-  },
 
   // Core Partner - PaimaStudios (Gaming Infrastructure)
   {
