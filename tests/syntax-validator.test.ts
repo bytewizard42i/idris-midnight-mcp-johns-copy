@@ -72,7 +72,7 @@ describe("Syntax Validator Service", () => {
 
   describe("scanForDeprecatedPatterns", () => {
     it("should detect deprecated ledger block syntax", () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 ledger {
   counter: Counter;
@@ -141,7 +141,7 @@ ledger {
     });
 
     it("should include line numbers in issues", () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 import CompactStandardLibrary;
 
 ledger {
@@ -156,7 +156,7 @@ ledger {
     });
 
     it("should return empty array for valid code", () => {
-      const code = `pragma language_version >= 0.16 && <= 0.18;
+      const code = `pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 

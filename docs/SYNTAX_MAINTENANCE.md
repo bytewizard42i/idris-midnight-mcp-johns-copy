@@ -19,7 +19,7 @@ Update the embedded documentation:
 
 ```typescript
 // Look for this section and update:
-"midnight://docs/compact-reference": `# Compact Language Syntax Reference (v0.16 - v0.18)
+"midnight://docs/compact-reference": `# Compact Language Syntax Reference (v0.16 - v0.21)
 ```
 
 **Checklist:**
@@ -102,7 +102,7 @@ npm test
 npm run build
 
 # 3. Manual test with a real contract
-echo 'pragma language_version >= 0.16 && <= 0.18;
+echo 'pragma language_version >= 0.16 && <= 0.21;
 import CompactStandardLibrary;
 export ledger counter: Counter;
 export circuit inc(): [] { counter.increment(1); }' > /tmp/test.compact
@@ -115,7 +115,8 @@ export circuit inc(): [] { counter.increment(1); }' > /tmp/test.compact
 
 | Compact Version | midnight-mcp Version | Key Changes                                          |
 | --------------- | -------------------- | ---------------------------------------------------- |
-| 0.16 - 0.18     | 0.1.33+              | Individual ledger decls, `[]` return, bounded pragma |
+| 0.20 - 0.21     | 0.2.18+              | Updated pragma range for compiler 0.28-0.29          |
+| 0.16 - 0.18     | 0.1.33 - 0.2.17      | Individual ledger decls, `[]` return, bounded pragma |
 | 0.14 - 0.15     | 0.1.0 - 0.1.32       | `ledger {}` block, `Cell<T>` wrapper                 |
 
 ## Finding Syntax Changes

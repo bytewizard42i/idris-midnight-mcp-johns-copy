@@ -594,7 +594,7 @@ export async function extractContractStructure(
       type: "invalid_pragma_format",
       line: lineNum,
       message: `Pragma includes patch version which may cause parse errors`,
-      suggestion: `Use bounded range format: 'pragma language_version >= 0.16 && <= 0.18;'`,
+      suggestion: `Use bounded range format: 'pragma language_version >= 0.16 && <= 0.21;'`,
       severity: "error",
     });
   }

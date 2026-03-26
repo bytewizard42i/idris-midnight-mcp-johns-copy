@@ -139,7 +139,7 @@ Compile Compact code using the hosted compiler service. Returns real compiler er
 // Output (success)
 {
   success: true;
-  message: string;           // "✅ Compilation successful (Compiler v0.18.0) in 2841ms"
+  message: string;           // "✅ Compilation successful (Compiler v0.29.0) in 2841ms"
   validationType: "compiler";
   compilerVersion: string;
   compilationMode: "syntax-only" | "full";
