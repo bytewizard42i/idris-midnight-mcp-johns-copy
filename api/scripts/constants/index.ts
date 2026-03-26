@@ -139,7 +139,6 @@ export const REPOSITORIES: RepoConfig[] = [
     branch: "main",
   },
   { owner: "midnightntwrk", repo: "midnight-architecture", branch: "main" },
-  { owner: "midnightntwrk", repo: "midnight-architecture-new", branch: "main" },
   { owner: "midnightntwrk", repo: "docteam", branch: "main" },
 
   // Examples & Templates

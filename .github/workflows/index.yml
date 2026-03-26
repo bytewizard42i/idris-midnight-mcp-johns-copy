@@ -1,5 +1,9 @@
 name: Index Repositories
 
+permissions:
+  contents: read
+  issues: write
+
 on:
   # Manual trigger
   workflow_dispatch:
