@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.18] - 2026-03-24
+
+### Fixed
+
+- **Language Version Range** - Updated supported Compact language version from `0.16-0.18` to `0.16-0.21` (compiler 0.29.0)
+  - All pragma examples, prompt templates, and validation suggestions now use `>= 0.16 && <= 0.21`
+  - Contracts using `pragma language_version >= 0.20` no longer fail with version mismatch
+
+- **Ledger Detection in Static Analysis** - `midnight-analyze-contract` now detects new-style ledger declarations (`export ledger name: Type;`) in addition to legacy block-style (`ledger { ... }`)
+  - Fixes `hasLedger: false` and `publicState: 0` when ledger fields exist
+
+### Updated
+
+- Embedded documentation, code examples, and syntax reference updated to reflect Compact v0.21
+- `SYNTAX_MAINTENANCE.md` version history table updated
+
 ## [0.2.17] - 2026-03-03
 
 ### Security

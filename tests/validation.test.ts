@@ -7,7 +7,7 @@ import { extractContractStructure } from "../src/tools/repository/validation.js"
 describe("Contract Structure Extraction", () => {
   describe("extractContractStructure", () => {
     it("should extract pragma version with >= operator", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 import CompactStandardLibrary;
 
@@ -16,7 +16,7 @@ export ledger counter: Counter;
       const result = await extractContractStructure({ code });
 
       expect(result.success).toBe(true);
-      expect(result.languageVersion).toBe("0.16");
+      expect(result.languageVersion).toBe("0.20");
     });
 
     it("should extract pragma version with > operator", async () => {
@@ -31,25 +31,25 @@ export ledger counter: Counter;
     });
 
     it("should extract pragma version with == operator", async () => {
-      const code = `pragma language_version == 0.16;
+      const code = `pragma language_version == 0.20;
 
 export ledger counter: Counter;
 `;
       const result = await extractContractStructure({ code });
 
       expect(result.success).toBe(true);
-      expect(result.languageVersion).toBe("0.16");
+      expect(result.languageVersion).toBe("0.20");
     });
 
     it("should extract pragma version with ~ operator", async () => {
-      const code = `pragma language_version ~ 0.16;
+      const code = `pragma language_version ~ 0.20;
 
 export ledger counter: Counter;
 `;
       const result = await extractContractStructure({ code });
 
       expect(result.success).toBe(true);
-      expect(result.languageVersion).toBe("0.16");
+      expect(result.languageVersion).toBe("0.20");
     });
 
     it("should extract pragma version with < operator", async () => {
@@ -64,18 +64,18 @@ export ledger counter: Counter;
     });
 
     it("should extract pragma version with <= operator", async () => {
-      const code = `pragma language_version <= 0.16;
+      const code = `pragma language_version <= 0.20;
 
 export ledger counter: Counter;
 `;
       const result = await extractContractStructure({ code });
 
       expect(result.success).toBe(true);
-      expect(result.languageVersion).toBe("0.16");
+      expect(result.languageVersion).toBe("0.20");
     });
 
     it("should extract imports", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 import CompactStandardLibrary;
 include "utils.compact";
@@ -88,7 +88,7 @@ include "utils.compact";
     });
 
     it("should extract circuit definitions", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 export circuit increment(amount: Field): [] {
   counter.increment(amount);
@@ -119,7 +119,7 @@ circuit helper(): Field {
     });
 
     it("should handle complex parameter types with nested generics", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 export circuit transfer(from: Opaque<"address">, to: Opaque<"address">, amounts: Map<Field, Uint<64>>): [Boolean, Field] {
   // implementation
@@ -140,7 +140,7 @@ export circuit transfer(from: Opaque<"address">, to: Opaque<"address">, amounts:
     });
 
     it("should handle function types in parameters", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 export circuit withCallback(fn: (a: Field, b: Field) => Boolean, data: Field): [] {
   // implementation
@@ -161,7 +161,7 @@ export circuit withCallback(fn: (a: Field, b: Field) => Boolean, data: Field): [
     });
 
     it("should handle string literals with commas in parameters", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 export circuit withStringType(addr: Opaque<"a, b">, data: Field): [] {
   // implementation
@@ -182,7 +182,7 @@ export circuit withStringType(addr: Opaque<"a, b">, data: Field): [] {
     });
 
     it("should extract witness definitions", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 export witness getSecret: () => Field;
 witness privateHelper: (x: Field) => Boolean;
@@ -201,7 +201,7 @@ witness privateHelper: (x: Field) => Boolean;
     });
 
     it("should extract ledger items", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 export ledger counter: Counter;
 export ledger balances: Map<Bytes<32>, Uint<64>>;
@@ -218,7 +218,7 @@ ledger privateData: Field;
     });
 
     it("should extract type definitions", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 type Address = Bytes<32>;
 type Balance = Uint<64>;
@@ -233,7 +233,7 @@ type Balance = Uint<64>;
     });
 
     it("should extract struct definitions", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 struct User {
   id: Field,
@@ -251,7 +251,7 @@ struct User {
     });
 
     it("should extract enum definitions", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 enum Status {
   Pending,
@@ -271,7 +271,7 @@ enum Status {
     });
 
     it("should generate accurate statistics", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 import CompactStandardLibrary;
 
@@ -303,7 +303,7 @@ type MyType = Field;
     });
 
     it("should handle empty contract", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 `;
       const result = await extractContractStructure({ code });
 
@@ -328,7 +328,7 @@ type MyType = Field;
 
     it("should reject binary content", async () => {
       const binaryContent =
-        "pragma language_version >= 0.16;\x00\x00binary data";
+        "pragma language_version >= 0.20;\x00\x00binary data";
       const result = await extractContractStructure({ code: binaryContent });
 
       expect(result.success).toBe(false);
@@ -336,7 +336,7 @@ type MyType = Field;
     });
 
     it("should generate summary message", async () => {
-      const code = `pragma language_version >= 0.16;
+      const code = `pragma language_version >= 0.20;
 
 export ledger counter: Counter;
 export circuit increment(): [] {}
@@ -388,7 +388,7 @@ describe("Standard Library Detection", () => {
   // These tests verify the word boundary detection for stdlib types
 
   it("should detect Counter type usage", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 export ledger counter: Counter;
 `;
     const result = await extractContractStructure({ code });
@@ -399,7 +399,7 @@ export ledger counter: Counter;
   });
 
   it("should detect Map type usage", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 export ledger data: Map<Field, Field>;
 `;
     const result = await extractContractStructure({ code });
@@ -412,7 +412,7 @@ export ledger data: Map<Field, Field>;
 
 describe("Pre-compilation Issue Detection", () => {
   it("should detect module-level const declarations", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 const MAX_VALUE: Uint<128> = 1000;
 
@@ -432,7 +432,7 @@ export circuit getValue(): Uint<128> {
   });
 
   it("should detect stdlib name collisions", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 import CompactStandardLibrary;
 
@@ -456,7 +456,7 @@ pure circuit burnAddress(): ZswapCoinPublicKey {
   });
 
   it("should detect sealed + export conflicts", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 sealed ledger tokenName: Bytes<32>;
 
@@ -481,7 +481,7 @@ export circuit initialize(name: Bytes<32>): [] {
   });
 
   it("should not flag const inside circuit blocks", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 export circuit getValue(): Uint<128> {
   const MAX_VALUE: Uint<128> = 1000;
@@ -500,7 +500,7 @@ export circuit getValue(): Uint<128> {
   });
 
   it("should not flag stdlib collision when no import", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 pure circuit burnAddress(): ZswapCoinPublicKey {
   return default<ZswapCoinPublicKey>;
@@ -518,7 +518,7 @@ pure circuit burnAddress(): ZswapCoinPublicKey {
   });
 
   it("should warn about missing constructor with sealed fields", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 sealed ledger tokenName: Bytes<32>;
 
@@ -537,7 +537,7 @@ export circuit initialize(name: Bytes<32>): [] {
   });
 
   it("should include issue count in message", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 const BAD_CONST: Field = 42;
 
@@ -553,7 +553,7 @@ export circuit test(): Field {
   });
 
   it("should detect division operator usage", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 export circuit divide(a: Uint<64>, b: Uint<64>): Uint<64> {
   return a / b;
@@ -576,7 +576,7 @@ export circuit divide(a: Uint<64>, b: Uint<64>): Uint<64> {
   });
 
   it("should detect Counter.value() access and suggest .read()", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 ledger gameCount: Counter;
 
@@ -601,7 +601,7 @@ export circuit getCount(): Uint<64> {
   });
 
   it("should warn about potential Uint overflow in multiplication", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 witness getQuotient(dividend: Uint<64>, divisor: Uint<64>): Uint<64>;
 
@@ -625,7 +625,7 @@ export circuit verifyDivision(dividend: Uint<64>, divisor: Uint<64>): [] {
   });
 
   it("should warn about undisclosed witness in conditional", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 witness secret: Uint<64>;
 
@@ -652,7 +652,7 @@ export circuit checkSecret(expected: Uint<64>): [] {
   });
 
   it("should not flag division in comments", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 // This is a comment about a / b division
 export circuit add(a: Uint<64>, b: Uint<64>): Uint<64> {
@@ -670,7 +670,7 @@ export circuit add(a: Uint<64>, b: Uint<64>): Uint<64> {
   });
 
   it("should detect constructor params assigned to ledger without disclose", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 sealed ledger tokenName: Bytes<32>;
 sealed ledger tokenSymbol: Bytes<8>;
@@ -698,7 +698,7 @@ constructor(name: Bytes<32>, symbol: Bytes<8>) {
   });
 
   it("should not flag constructor params when disclose is used", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 sealed ledger tokenName: Bytes<32>;
 sealed ledger tokenSymbol: Bytes<8>;
@@ -720,7 +720,7 @@ constructor(name: Bytes<32>, symbol: Bytes<8>) {
   });
 
   it("should detect if expression used in assignment", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 ledger balances: Map<Bytes<32>, Uint<128>>;
 
@@ -748,7 +748,7 @@ export circuit getBalance(addr: Bytes<32>): Uint<128> {
   });
 
   it("should detect Void return type", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 export circuit doSomething(): Void {
   // some code
@@ -769,7 +769,7 @@ export circuit doSomething(): Void {
   });
 
   it("should not flag valid empty tuple return type", async () => {
-    const code = `pragma language_version >= 0.16;
+    const code = `pragma language_version >= 0.20;
 
 export circuit doSomething(): [] {
   // some code

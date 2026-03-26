@@ -103,7 +103,7 @@ export function parseCompactFile(path: string, content: string): ParsedFile {
     }
   }
 
-  // Parse ledger block
+  // Parse ledger block (legacy block-style: `ledger { ... }`)
   const ledgerRegex = /ledger\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/gs;
   let ledgerMatch;
   while ((ledgerMatch = ledgerRegex.exec(content)) !== null) {
@@ -140,6 +140,31 @@ export function parseCompactFile(path: string, content: string): ParsedFile {
         returnType: fieldMatch[3].trim(),
       });
     }
+  }
+
+  // Parse new-style ledger declarations: `[export] ledger fieldName: Type;`
+  const newLedgerRegex =
+    /(?:(export)\s+)?ledger\s+(\w+)\s*:\s*([^;]+);/gm;
+  let newLedgerMatch;
+  while ((newLedgerMatch = newLedgerRegex.exec(content)) !== null) {
+    hasLedger = true;
+    const isExport = newLedgerMatch[1] === "export";
+    const fieldName = newLedgerMatch[2];
+    const fieldType = newLedgerMatch[3].trim();
+    const startLine = content
+      .substring(0, newLedgerMatch.index)
+      .split("\n").length;
+
+    codeUnits.push({
+      type: "ledger",
+      name: fieldName,
+      code: newLedgerMatch[0].trim(),
+      startLine,
+      endLine: startLine,
+      isPublic: isExport,
+      isPrivate: !isExport,
+      returnType: fieldType,
+    });
   }
 
   // Parse circuit definitions

@@ -17,7 +17,7 @@ import {
 describe("Contract Analyzer", () => {
   it("should analyze a simple counter contract", async () => {
     const code = `
-pragma language_version >= 0.18.0;
+pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 
@@ -154,7 +154,7 @@ describe("Compile Contract", () => {
       json: async () => ({
         success: true,
         output: "Compilation successful",
-        compilerVersion: "0.18.0",
+        compilerVersion: "0.29.0",
         compiledAt: "2026-01-19T19:17:56.064Z",
         executionTime: 2841,
       }),
@@ -162,7 +162,7 @@ describe("Compile Contract", () => {
 
     const result = (await compileContract({
       code: `
-pragma language_version >= 0.18.0;
+pragma language_version >= 0.16 && <= 0.21;
 
 ledger {
   counter: Counter;
@@ -176,7 +176,7 @@ export circuit increment(): Void {
 
     expect(result.success).toBe(true);
     expect(result.message).toContain("Compilation successful");
-    expect(result.compilerVersion).toBe("0.18.0");
+    expect(result.compilerVersion).toBe("0.29.0");
   });
 
   it("should return error details for invalid contract", async () => {
@@ -217,7 +217,7 @@ export circuit increment(): Void {
       json: async () => ({
         success: true,
         output: "Compilation successful",
-        compilerVersion: "0.18.0",
+        compilerVersion: "0.29.0",
         compiledAt: "2026-01-19T19:17:56.064Z",
         executionTime: 2841,
       }),
@@ -225,7 +225,7 @@ export circuit increment(): Void {
 
     const result = (await compileContract({
       code: `
-pragma language_version >= 0.18.0;
+pragma language_version >= 0.16 && <= 0.21;
 
 ledger {
   counter: Counter;
@@ -240,14 +240,14 @@ export circuit increment(): Void {
     expect(result.success).toBe(true);
     expect(result.validationType).toBe("compiler");
     expect(result.message).toContain("Compilation successful");
-    expect(result.compilerVersion).toBe("0.18.0");
+    expect(result.compilerVersion).toBe("0.29.0");
   });
 
   it("should fall back to static analysis on network failures", async () => {
     mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
     const validCode = `
-pragma language_version >= 0.18.0;
+pragma language_version >= 0.16 && <= 0.21;
 
 ledger {
   counter: Counter;
@@ -338,14 +338,14 @@ describe("Compiler Status", () => {
       ok: true,
       json: async () => ({
         status: "ok",
-        compilerVersion: "0.18.0",
+        compilerVersion: "0.29.0",
       }),
     });
 
     const result = (await getCompilerStatus()) as Record<string, unknown>;
 
     expect(result.available).toBe(true);
-    expect(result.compilerVersion).toBe("0.18.0");
+    expect(result.compilerVersion).toBe("0.29.0");
     expect(result.message).toContain("✅");
   });
 

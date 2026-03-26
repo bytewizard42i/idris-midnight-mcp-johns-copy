@@ -103,7 +103,7 @@ describe("Syntax Drift Detection", () => {
 
   describe("Common Mistakes Detection", () => {
     it("should detect deprecated ledger block syntax", async () => {
-      const badCode = `pragma language_version >= 0.16 && <= 0.18;
+      const badCode = `pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 
@@ -125,7 +125,7 @@ ledger {
     });
 
     it("should detect invalid Void return type", async () => {
-      const badCode = `pragma language_version >= 0.16 && <= 0.18;
+      const badCode = `pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 
@@ -167,7 +167,7 @@ export ledger counter: Counter;
     });
 
     it("should detect deprecated Cell wrapper", async () => {
-      const badCode = `pragma language_version >= 0.16 && <= 0.18;
+      const badCode = `pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 
@@ -186,7 +186,7 @@ export ledger value: Cell<Field>;
     });
 
     it("should detect unexported enum", async () => {
-      const badCode = `pragma language_version >= 0.16 && <= 0.18;
+      const badCode = `pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 
@@ -210,7 +210,7 @@ enum State {
 
   describe("CORRECT patterns should NOT trigger errors", () => {
     it("should accept correct pragma format with bounded range", async () => {
-      const goodCode = `pragma language_version >= 0.16 && <= 0.18;
+      const goodCode = `pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 
@@ -228,7 +228,7 @@ export ledger counter: Counter;
     });
 
     it("should accept individual ledger declarations", async () => {
-      const goodCode = `pragma language_version >= 0.16 && <= 0.18;
+      const goodCode = `pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 
@@ -248,7 +248,7 @@ ledger secretValue: Field;
     });
 
     it("should accept [] return type", async () => {
-      const goodCode = `pragma language_version >= 0.16 && <= 0.18;
+      const goodCode = `pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 
@@ -270,7 +270,7 @@ export circuit increment(): [] {
     });
 
     it("should accept exported enum", async () => {
-      const goodCode = `pragma language_version >= 0.16 && <= 0.18;
+      const goodCode = `pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 
@@ -325,7 +325,7 @@ export enum State {
   describe("Full Contract Template", () => {
     it("counter contract template should pass static analysis", async () => {
       // A complete counter contract based on the documented patterns
-      const counterContract = `pragma language_version >= 0.16 && <= 0.18;
+      const counterContract = `pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 
@@ -377,7 +377,7 @@ export circuit get_value(): Uint<64> {
     });
 
     it("token contract template should pass static analysis", async () => {
-      const tokenContract = `pragma language_version >= 0.16 && <= 0.18;
+      const tokenContract = `pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 

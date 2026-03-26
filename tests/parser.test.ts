@@ -57,7 +57,7 @@ witness getSecret(): Field {
 
   it("should parse imports", () => {
     const code = `
-pragma language_version >= 0.18.0;
+pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 import "@openzeppelin/compact-contracts/src/token/FungibleToken"
@@ -78,7 +78,7 @@ ledger {
 
   it("should parse a complete contract", () => {
     const code = `
-pragma language_version >= 0.18.0;
+pragma language_version >= 0.16 && <= 0.21;
 
 import CompactStandardLibrary;
 
