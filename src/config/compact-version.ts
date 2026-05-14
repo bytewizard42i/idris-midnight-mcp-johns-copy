@@ -26,9 +26,9 @@ export const COMPACT_VERSION = {
   /** Minimum supported version */
   min: "0.16",
   /** Maximum supported version */
-  max: "0.21",
+  max: "0.23",
   /** When this config was last updated */
-  lastUpdated: "2026-03-24",
+  lastUpdated: "2026-05-14",
   /** Source of truth for syntax patterns */
   referenceSource: "https://github.com/piotr-iohk/template-contract",
 };

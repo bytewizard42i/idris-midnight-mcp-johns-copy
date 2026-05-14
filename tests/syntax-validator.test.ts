@@ -156,7 +156,7 @@ ledger {
     });
 
     it("should return empty array for valid code", () => {
-      const code = `pragma language_version >= 0.16 && <= 0.21;
+      const code = `pragma language_version >= 0.16 && <= 0.23;
 
 import CompactStandardLibrary;
 

@@ -17,7 +17,7 @@ import {
 describe("Contract Analyzer", () => {
   it("should analyze a simple counter contract", async () => {
     const code = `
-pragma language_version >= 0.16 && <= 0.21;
+pragma language_version >= 0.16 && <= 0.23;
 
 import CompactStandardLibrary;
 
@@ -162,7 +162,7 @@ describe("Compile Contract", () => {
 
     const result = (await compileContract({
       code: `
-pragma language_version >= 0.16 && <= 0.21;
+pragma language_version >= 0.16 && <= 0.23;
 
 ledger {
   counter: Counter;
@@ -225,7 +225,7 @@ export circuit increment(): Void {
 
     const result = (await compileContract({
       code: `
-pragma language_version >= 0.16 && <= 0.21;
+pragma language_version >= 0.16 && <= 0.23;
 
 ledger {
   counter: Counter;
@@ -247,7 +247,7 @@ export circuit increment(): Void {
     mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
     const validCode = `
-pragma language_version >= 0.16 && <= 0.21;
+pragma language_version >= 0.16 && <= 0.23;
 
 ledger {
   counter: Counter;

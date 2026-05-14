@@ -113,11 +113,12 @@ export circuit inc(): [] { counter.increment(1); }' > /tmp/test.compact
 
 ## Version History
 
-| Compact Version | midnight-mcp Version | Key Changes                                          |
-| --------------- | -------------------- | ---------------------------------------------------- |
-| 0.20 - 0.21     | 0.2.18+              | Updated pragma range for compiler 0.28-0.29          |
-| 0.16 - 0.18     | 0.1.33 - 0.2.17      | Individual ledger decls, `[]` return, bounded pragma |
-| 0.14 - 0.15     | 0.1.0 - 0.1.32       | `ledger {}` block, `Cell<T>` wrapper                 |
+| Compact Version | midnight-mcp Version | Key Changes                                                                                       |
+| --------------- | -------------------- | ------------------------------------------------------------------------------------------------- |
+| 0.22 - 0.23     | 0.2.19+              | Updated pragma range for compactc 0.30 - 0.31. v0.31 adds untaken-branch workarounds, generic `for` bounds, `contract-info.json` ledger layout |
+| 0.20 - 0.21     | 0.2.18               | Updated pragma range for compiler 0.28-0.29                                                       |
+| 0.16 - 0.18     | 0.1.33 - 0.2.17      | Individual ledger decls, `[]` return, bounded pragma                                              |
+| 0.14 - 0.15     | 0.1.0 - 0.1.32       | `ledger {}` block, `Cell<T>` wrapper                                                              |
 
 ## Finding Syntax Changes
 
